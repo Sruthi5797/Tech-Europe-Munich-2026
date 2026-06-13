@@ -20,6 +20,10 @@ from patient_checkin.tools import (
     log_water_intake,
     log_salt_intake,
     log_mood,
+    log_fatigue,
+    log_appetite,
+    log_activity_level,
+    log_weight,
     initiate_hand_ai_test,
 )
 
@@ -77,6 +81,10 @@ root_agent = Agent(
         log_water_intake,
         log_salt_intake,
         log_mood,
+        log_fatigue,
+        log_appetite,
+        log_activity_level,
+        log_weight,
         initiate_hand_ai_test,
     ],
 )
