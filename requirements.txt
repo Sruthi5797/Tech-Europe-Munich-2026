@@ -1,0 +1,18 @@
+# ──────────────────────────────────────────────
+#  LiverLink — Python Dependencies
+# ──────────────────────────────────────────────
+
+# Google Agent Development Kit
+google-adk>=1.0.0
+
+# Gemini API (included transitively via ADK, listed explicitly for clarity)
+google-generativeai>=0.8.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
+# MongoDB driver (Atlas / SRV connection)
+pymongo>=4.6.0
+
+# Required by ADK web UI
+python-multipart>=0.0.9
