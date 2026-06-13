@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LiverLink — Lab Report Scanner</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #0d1117;
+    color: #e6edf3;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #58a6ff;
+    letter-spacing: -0.5px;
+  }
+
+  header p {
+    color: #8b949e;
+    font-size: 0.9rem;
+    margin-top: 6px;
+  }
+
+  .card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 24px;
+    width: 100%;
+    max-width: 640px;
+    margin-bottom: 20px;
+  }
+
+  .card h2 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8b949e;
+    margin-bottom: 16px;
+  }
+
+  /* Upload zone */
+  .upload-zone {
+    border: 2px dashed #30363d;
+    border-radius: 10px;
+    padding: 36px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: #58a6ff;
+    background: rgba(88,166,255,0.05);
+  }
+
+  .upload-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .upload-zone .icon { font-size: 2.5rem; margin-bottom: 10px; }
+  .upload-zone p { color: #8b949e; font-size: 0.9rem; }
+  .upload-zone p span { color: #58a6ff; }
+
+  /* Preview */
+  #preview-wrap { display: none; margin-top: 16px; text-align: center; }
+  #preview-img {
+    max-width: 100%;
+    max-height: 320px;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+    object-fit: contain;
+  }
+
+  /* Camera */
+  #camera-wrap { display: none; margin-top: 16px; }
+  #video {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+    background: #000;
+  }
+  #canvas { display: none; }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-primary { background: #238636; color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: #2ea043; }
+
+  .btn-secondary { background: #21262d; color: #e6edf3; border: 1px solid #30363d; }
+  .btn-secondary:hover:not(:disabled) { background: #30363d; }
+
+  .btn-danger { background: #da3633; color: #fff; }
+  .btn-danger:hover:not(:disabled) { background: #f85149; }
+
+  .btn-cam { background: #1f6feb; color: #fff; }
+  .btn-cam:hover:not(:disabled) { background: #388bfd; }
+
+  /* Status */
+  #status {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #21262d;
+    border-radius: 8px;
+    margin-top: 16px;
+    font-size: 0.875rem;
+    color: #8b949e;
+  }
+
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid #30363d;
+    border-top-color: #58a6ff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Result */
+  #result-wrap { display: none; }
+
+  .urgency-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 14px;
+  }
+
+  .urgency-CRITICAL { background: #da3633; color: #fff; }
+  .urgency-HIGH     { background: #d29922; color: #000; }
+  .urgency-MODERATE { background: #1f6feb; color: #fff; }
+  .urgency-NORMAL   { background: #238636; color: #fff; }
+
+  .summary-box {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: #c9d1d9;
+    margin-bottom: 16px;
+  }
+
+  .notifications {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .notif-chip {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .notif-on  { background: rgba(35,134,54,0.2); color: #3fb950; border: 1px solid #238636; }
+  .notif-off { background: rgba(48,54,61,0.5);  color: #8b949e; border: 1px solid #30363d; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  th {
+    text-align: left;
+    padding: 8px 10px;
+    background: #21262d;
+    color: #8b949e;
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  td {
+    padding: 9px 10px;
+    border-bottom: 1px solid #21262d;
+    color: #c9d1d9;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  .flag-HIGH { color: #f85149; font-weight: 700; }
+  .flag-LOW  { color: #d29922; font-weight: 700; }
+  .flag-NORMAL { color: #3fb950; }
+
+  .dot-flag { font-size: 0.7rem; }
+
+  .section-title {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8b949e;
+    margin: 16px 0 8px;
+  }
+
+  .concern-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .concern-list li {
+    font-size: 0.85rem;
+    color: #c9d1d9;
+    padding: 6px 10px;
+    background: #0d1117;
+    border-radius: 6px;
+    border-left: 3px solid #58a6ff;
+  }
+
+  .meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .meta-item { font-size: 0.82rem; }
+  .meta-item .label { color: #8b949e; }
+  .meta-item .value { color: #e6edf3; font-weight: 500; }
+
+  .follow-up {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(210,153,34,0.1);
+    border: 1px solid #d29922;
+    color: #d29922;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 8px;
+  }
+
+  #raw-json { display: none; }
+  #raw-json pre {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 0.78rem;
+    overflow-x: auto;
+    color: #8b949e;
+  }
+
+  .toggle-raw {
+    background: none;
+    border: 1px solid #30363d;
+    color: #8b949e;
+    font-size: 0.78rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+
+  .toggle-raw:hover { background: #21262d; color: #e6edf3; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🩺 LiverLink Lab Scanner</h1>
+  <p>Upload or photograph a liver function test report — the AI agent analyses it instantly.</p>
+</header>
+
+<!-- Upload card -->
+<div class="card">
+  <h2>📄 Lab Report</h2>
+
+  <div class="upload-zone" id="drop-zone">
+    <input type="file" id="file-input" accept="image/*">
+    <div class="icon">📂</div>
+    <p>Drag & drop a report image here<br>or <span>click to browse</span></p>
+  </div>
+
+  <div id="preview-wrap">
+    <img id="preview-img" alt="Report preview">
+  </div>
+
+  <!-- Camera -->
+  <div id="camera-wrap">
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-cam" id="btn-camera">📷 Use Camera</button>
+    <button class="btn-primary" id="btn-capture" style="display:none">📸 Capture</button>
+    <button class="btn-secondary" id="btn-stop-cam" style="display:none">✕ Stop Camera</button>
+    <button class="btn-secondary" id="btn-clear" style="display:none">🗑 Clear</button>
+    <button class="btn-primary" id="btn-analyse" disabled>🔬 Analyse Report</button>
+  </div>
+
+  <div id="status">
+    <div class="spinner"></div>
+    <span id="status-text">Sending to Lab Agent…</span>
+  </div>
+</div>
+
+<!-- ── LAB AGENT RESULT ── -->
+<div class="card" id="result-wrap" style="display:none">
+  <h2>🧪 Lab Agent — Report Analysis</h2>
+
+  <div id="urgency-badge-wrap"></div>
+  <div id="notif-wrap" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;"></div>
+  <div id="alert-msg-wrap" style="font-size:0.82rem;color:#d29922;margin-bottom:14px;"></div>
+  <div class="summary-box" id="summary-text"></div>
+
+  <p class="section-title">Patient</p>
+  <div class="meta-grid" id="meta-grid"></div>
+
+  <p class="section-title">Test Results</p>
+  <table id="results-table">
+    <thead>
+      <tr><th>Test</th><th>Result</th><th>Reference</th><th>Status</th></tr>
+    </thead>
+    <tbody id="results-body"></tbody>
+  </table>
+
+  <button class="toggle-raw" onclick="toggleRaw('raw-lab')">{ } Raw Lab JSON</button>
+  <div id="raw-lab" style="display:none"><pre id="raw-lab-pre" style="background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:14px;font-size:0.78rem;overflow-x:auto;color:#8b949e;margin-top:8px;"></pre></div>
+</div>
+
+<!-- ── DOCTOR AGENT RESULT ── -->
+<div class="card" id="doctor-wrap" style="display:none">
+  <h2>👨‍⚕️ Doctor Agent — Clinical Assessment</h2>
+
+  <div id="doctor-badge-wrap" style="margin-bottom:12px;"></div>
+
+  <div class="summary-box" id="doctor-summary" style="margin-bottom:16px;"></div>
+
+  <p class="section-title">Injury Pattern & Severity</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+    <span id="pattern-chip" style="padding:6px 14px;border-radius:20px;font-size:0.82rem;font-weight:700;background:rgba(88,166,255,0.15);color:#58a6ff;border:1px solid #1f6feb;"></span>
+    <span id="severity-chip" style="padding:6px 14px;border-radius:20px;font-size:0.82rem;font-weight:700;background:rgba(210,153,34,0.15);color:#d29922;border:1px solid #d29922;"></span>
+  </div>
+
+  <p class="section-title">Clinical Assessment</p>
+  <div class="summary-box" id="clinical-assessment"></div>
+
+  <p class="section-title">Differential Considerations</p>
+  <ul class="concern-list" id="differentials-list"></ul>
+
+  <p class="section-title">Recommended Actions</p>
+  <ul class="concern-list" id="doctor-actions-list"></ul>
+
+  <p class="section-title">Follow-up</p>
+  <div id="followup-wrap"></div>
+
+  <button class="toggle-raw" onclick="toggleRaw('raw-doctor')" style="margin-top:12px;">{ } Raw Doctor JSON</button>
+  <div id="raw-doctor" style="display:none"><pre id="raw-doctor-pre" style="background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:14px;font-size:0.78rem;overflow-x:auto;color:#8b949e;margin-top:8px;"></pre></div>
+</div>
+
+<script>
+const ADK_BASE   = ''; // proxy: same origin
+const APP_NAME   = 'liverlink_pipeline';
+const USER_ID    = 'liverlink-user';
+
+let capturedImageB64 = null;
+let capturedMimeType = null;
+let stream           = null;
+
+// ── File upload ──────────────────────────────────────────────────────────────
+const fileInput  = document.getElementById('file-input');
+const dropZone   = document.getElementById('drop-zone');
+const previewImg = document.getElementById('preview-img');
+
+fileInput.addEventListener('change', e => loadFile(e.target.files[0]));
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  loadFile(e.dataTransfer.files[0]);
+});
+
+function loadFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      // Resize to max 1600px on longest side before encoding
+      const MAX = 1600;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else       { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      capturedMimeType = 'image/jpeg';
+      capturedImageB64 = dataUrl.split(',')[1];
+      showPreview(dataUrl);
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function showPreview(src) {
+  previewImg.src = src;
+  document.getElementById('preview-wrap').style.display = 'block';
+  document.getElementById('btn-clear').style.display   = 'inline-block';
+  document.getElementById('btn-analyse').disabled       = false;
+  document.getElementById('result-wrap').style.display  = 'none';
+}
+
+// ── Camera ───────────────────────────────────────────────────────────────────
+document.getElementById('btn-camera').addEventListener('click', async () => {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    document.getElementById('video').srcObject = stream;
+    document.getElementById('camera-wrap').style.display = 'block';
+    document.getElementById('btn-camera').style.display  = 'none';
+    document.getElementById('btn-capture').style.display = 'inline-block';
+    document.getElementById('btn-stop-cam').style.display = 'inline-block';
+  } catch (err) {
+    alert('Camera access denied: ' + err.message);
+  }
+});
+
+document.getElementById('btn-capture').addEventListener('click', () => {
+  const video  = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  canvas.width  = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+  capturedMimeType = 'image/jpeg';
+  capturedImageB64 = dataUrl.split(',')[1];
+  stopCamera();
+  showPreview(dataUrl);
+});
+
+document.getElementById('btn-stop-cam').addEventListener('click', stopCamera);
+
+function stopCamera() {
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  stream = null;
+  document.getElementById('camera-wrap').style.display  = 'none';
+  document.getElementById('btn-capture').style.display  = 'none';
+  document.getElementById('btn-stop-cam').style.display = 'none';
+  document.getElementById('btn-camera').style.display   = 'inline-block';
+}
+
+// ── Clear ────────────────────────────────────────────────────────────────────
+document.getElementById('btn-clear').addEventListener('click', () => {
+  capturedImageB64 = null; capturedMimeType = null;
+  fileInput.value = '';
+  document.getElementById('preview-wrap').style.display = 'none';
+  document.getElementById('btn-clear').style.display    = 'none';
+  document.getElementById('btn-analyse').disabled       = true;
+  document.getElementById('result-wrap').style.display  = 'none';
+});
+
+// ── Analyse ──────────────────────────────────────────────────────────────────
+document.getElementById('btn-analyse').addEventListener('click', analyse);
+
+async function analyse() {
+  if (!capturedImageB64) return;
+
+  const statusEl = document.getElementById('status');
+  statusEl.style.display = 'flex';
+  document.getElementById('btn-analyse').disabled = true;
+  document.getElementById('result-wrap').style.display = 'none';
+
+  try {
+    // Create a fresh session
+    const sessionId = 'session-' + Date.now();
+    await fetch(`${ADK_BASE}/apps/${APP_NAME}/users/${USER_ID}/sessions/${sessionId}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}'
+    });
+
+    setStatus('Sending image to Lab Agent…');
+
+    const body = {
+      app_name:    APP_NAME,
+      user_id:     USER_ID,
+      session_id:  sessionId,
+      new_message: {
+        role:  'user',
+        parts: [
+          {
+            inline_data: {
+              mime_type: capturedMimeType,
+              data:      capturedImageB64
+            }
+          },
+          { text: 'Analyse this lab report image and return the full structured JSON payload.' }
+        ]
+      }
+    };
+
+    setStatus('Lab Agent analysing report…');
+    const res = await fetch(`${ADK_BASE}/run`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) throw new Error('Server error: ' + res.status);
+
+    const events = await res.json();
+
+    // Collect all text parts from all events by author
+    const byAuthor = {};
+    for (const e of events) {
+      if (!e.author || !e.content?.parts) continue;
+      const txt = e.content.parts.map(p => p.text || '').join('');
+      if (txt) byAuthor[e.author] = (byAuthor[e.author] || '') + txt;
+    }
+
+    const parseJSON = raw => {
+      const cleaned = raw.trim().replace(/^```json\s*/,'').replace(/\s*```$/,'').trim();
+      return JSON.parse(cleaned);
+    };
+
+    const labRaw    = byAuthor['lab_agent']    || '';
+    const doctorRaw = byAuthor['doctor_agent'] || '';
+
+    if (labRaw)    renderLab(parseJSON(labRaw));
+    if (doctorRaw) renderDoctor(parseJSON(doctorRaw));
+
+    if (!labRaw && !doctorRaw) throw new Error('No output received from agents.');
+
+  } catch (err) {
+    alert('Error: ' + err.message);
+    console.error(err);
+  } finally {
+    statusEl.style.display = 'none';
+    document.getElementById('btn-analyse').disabled = false;
+  }
+}
+
+function setStatus(msg) {
+  document.getElementById('status-text').textContent = msg;
+}
+
+// ── Lab Agent render ──────────────────────────────────────────────────────────
+function renderLab(d) {
+  const ul = d.urgency_level || 'NORMAL';
+  document.getElementById('urgency-badge-wrap').innerHTML =
+    `<span class="urgency-badge urgency-${ul}">⚠ ${ul}</span>`;
+
+  const notifs = d.notifications || {};
+  document.getElementById('notif-wrap').innerHTML = [
+    ['🆕 New Report', notifs.new_report_alert],
+    ['👨‍⚕️ Doctor Notified', notifs.notify_doctor],
+    ['🔔 Patient Notified', notifs.notify_patient],
+  ].map(([label, on]) =>
+    `<span class="notif-chip ${on ? 'notif-on' : 'notif-off'}">${label}</span>`
+  ).join('');
+
+  if (notifs.alert_message)
+    document.getElementById('alert-msg-wrap').textContent = '📲 ' + notifs.alert_message;
+
+  document.getElementById('summary-text').textContent = d.lab_summary || d.agent_summary || '—';
+
+  const m = d.report_metadata || {};
+  document.getElementById('meta-grid').innerHTML = [
+    ['Patient',     m.patient_name],
+    ['ID',          m.patient_id],
+    ['DOB',         m.date_of_birth],
+    ['Age / Sex',   [m.age, m.sex].filter(Boolean).join(' / ')],
+    ['Report Date', m.report_date],
+    ['Accession',   m.accession_number],
+    ['Physician',   m.referring_physician],
+    ['Lab',         m.lab_name],
+  ].map(([label, val]) =>
+    `<div class="meta-item"><div class="label">${label}</div><div class="value">${val || '—'}</div></div>`
+  ).join('');
+
+  document.getElementById('results-body').innerHTML = (d.test_results || []).map(t => {
+    const cls = `flag-${t.status}`;
+    const dot = t.is_flagged ? '🔴' : '🟢';
+    return `<tr>
+      <td>${t.name}</td>
+      <td class="${cls}">${t.value} ${t.unit}</td>
+      <td>${t.reference_range}</td>
+      <td class="${cls}">${dot} ${t.status}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('raw-lab-pre').textContent = JSON.stringify(d, null, 2);
+  document.getElementById('result-wrap').style.display = 'block';
+  document.getElementById('result-wrap').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── Doctor Agent render ───────────────────────────────────────────────────────
+function renderDoctor(d) {
+  const ul = d.urgency_level || 'NORMAL';
+  document.getElementById('doctor-badge-wrap').innerHTML =
+    `<span class="urgency-badge urgency-${ul}">⚠ ${ul}</span>`;
+
+  document.getElementById('doctor-summary').textContent = d.doctor_summary || '—';
+  document.getElementById('clinical-assessment').textContent = d.clinical_assessment || '—';
+
+  document.getElementById('pattern-chip').textContent  = '🔬 ' + (d.injury_pattern || '—');
+  document.getElementById('severity-chip').textContent = '📊 ' + (d.severity || '—');
+
+  document.getElementById('differentials-list').innerHTML =
+    (d.differential_considerations || []).map(c => `<li>${c}</li>`).join('');
+
+  document.getElementById('doctor-actions-list').innerHTML =
+    (d.recommended_actions || []).map(a =>
+      `<li><strong>#${a.priority}</strong> ${a.action}<br><span style="color:#8b949e;font-size:0.8rem">${a.rationale}</span></li>`
+    ).join('');
+
+  const fu = d.follow_up || {};
+  document.getElementById('followup-wrap').innerHTML = `
+    <div class="follow-up" style="flex-direction:column;align-items:flex-start;gap:4px;">
+      <span>⏱ <strong>${fu.timeframe || '—'}</strong></span>
+      ${fu.retest_in ? `<span style="font-size:0.82rem;font-weight:400">${fu.retest_in}</span>` : ''}
+      ${(fu.monitoring_parameters||[]).length ? `<span style="font-size:0.82rem;font-weight:400;color:#8b949e">Monitor: ${fu.monitoring_parameters.join(', ')}</span>` : ''}
+    </div>`;
+
+  document.getElementById('raw-doctor-pre').textContent = JSON.stringify(d, null, 2);
+  document.getElementById('doctor-wrap').style.display = 'block';
+  document.getElementById('doctor-wrap').scrollIntoView({ behavior: 'smooth' });
+}
+
+function toggleRaw(id) {
+  const el = document.getElementById(id);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+</script>
+</body>
+</html>
