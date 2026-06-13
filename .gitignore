@@ -37,6 +37,9 @@ htmlcov/
 # VS Code
 .vscode/
 
+# Data
+data/
+
 # Logs
 *.log
 **/*.log

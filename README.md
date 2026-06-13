@@ -69,14 +69,18 @@ red-flag symptoms (confusion, jaundice, vomiting blood) for immediate escalation
 Tech-Europe-Munich-2026/
 ├── .env.example                    # Environment variable template
 ├── .gitignore
-├── requirements.txt                # Python dependencies
 ├── README.md
-└── agents/
-    └── patient_checkin/            # ← ADK agent package (run `adk web` from here)
-        ├── __init__.py             # Exports root_agent (required by ADK)
-        ├── agent.py                # Agent definition — model, tools, description
-        ├── prompts.py              # Full system instruction for Lila
-        └── tools.py                # 7 logging tools (medications, sleep, protein…)
+├── frontend/                       # UI files (HTML, CSS, JS)
+├── backend/                        # Python backend and ADK agents
+│   ├── requirements.txt            # Python dependencies
+│   ├── LiverLink/                  # Proxy server and Lab pipeline
+│   └── agents/                     # ADK agent packages
+│       └── patient_checkin/        # ADK agent package (run `adk web` from here)
+│           ├── __init__.py         # Exports root_agent (required by ADK)
+│           ├── agent.py            # Agent definition — model, tools, description
+│           ├── prompts.py          # Full system instruction for Lila
+│           └── tools.py            # 7 logging tools (medications, sleep, protein…)
+├── data/                           # Datasets
 ```
 
 ---
