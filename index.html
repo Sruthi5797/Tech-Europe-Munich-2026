@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LiverLink - Chronic Liver Disease Support Platform</title>
+  <meta name="description" content="LiverLink is an interactive healthcare platform connecting patients, caregivers, doctors, and labs for proactive chronic liver disease management.">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+  <!-- Background Decorative Gradients -->
+  <div class="bg-blur bg-blur-1"></div>
+  <div class="bg-blur bg-blur-2"></div>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="container header-container">
+      <div class="logo">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21Z" stroke="url(#logo-grad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 7V12L15 15" stroke="url(#logo-grad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <defs>
+            <linearGradient id="logo-grad" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#06b6d4"/>
+              <stop offset="1" stop-color="#10b981"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span class="logo-text">Liver<span class="highlight">Link</span></span>
+      </div>
+      <nav class="nav-links">
+        <a href="#stats-section">The Crisis</a>
+        <a href="#selector-section">Dashboards</a>
+        <a href="#about-section">Our Mission</a>
+      </nav>
+      <button class="btn btn-primary" onclick="scrollToSelector()">Launch Demo</button>
+    </div>
+  </header>
+
+  <!-- Main Scrollable Content (Landing Page) -->
+  <main id="landing-page" class="landing-page">
+    
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="container hero-container">
+        <div class="hero-badge">Healthcare Hackathon 2026</div>
+        <h1 class="hero-title">
+          The Silent Crisis of <br>
+          <span class="text-gradient">Chronic Liver Disease</span>
+        </h1>
+        <p class="hero-description">
+          Liver disease progresses silently, often undiagnosed until irreversible damage occurs. 
+          When patients suffer, the entire support circle—caregivers, doctors, and labs—struggles to communicate. 
+          <strong>LiverLink</strong> bridges the gap in real-time, replacing fear and delays with instant connection.
+        </p>
+        <div class="hero-actions">
+          <button class="btn btn-primary btn-lg" onclick="scrollToSelector()">Interactive Dashboard Demo</button>
+          <a href="#stats-section" class="btn btn-secondary btn-lg">Learn the Facts</a>
+        </div>
+      </div>
+      <!-- Scroll Indicator -->
+      <div class="scroll-indicator" onclick="scrollToStats()">
+        <span>Scroll to see the impact</span>
+        <svg class="chevron-down" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </section>
+
+    <!-- Stats & Emotional Impact Section -->
+    <section id="stats-section" class="stats-section">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Why LiverLink Matters</h2>
+          <p class="section-subtitle">The alarming metrics that demand a unified patient care ecosystem.</p>
+        </div>
+        
+        <div class="stats-grid">
+          <!-- Stat 1 -->
+          <div class="stat-card">
+            <div class="stat-icon-wrapper cyan">
+              <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+            </div>
+            <div class="stat-number">25%</div>
+            <div class="stat-title">Global Prevalence</div>
+            <p class="stat-description">
+              Over a quarter of the global population is estimated to suffer from Non-Alcoholic Fatty Liver Disease (NAFLD).
+            </p>
+          </div>
+          <!-- Stat 2 -->
+          <div class="stat-card">
+            <div class="stat-icon-wrapper red">
+              <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </div>
+            <div class="stat-number">70%</div>
+            <div class="stat-title">Silent Stage Diagnosis</div>
+            <p class="stat-description">
+              Most patients are diagnosed late. The liver has no pain receptors, meaning damage accumulates without symptoms.
+            </p>
+          </div>
+          <!-- Stat 3 -->
+          <div class="stat-card">
+            <div class="stat-icon-wrapper purple">
+              <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </div>
+            <div class="stat-number">1 in 3</div>
+            <div class="stat-title">Caregiver Burnout</div>
+            <p class="stat-description">
+              Family caregivers experience clinical depression and anxiety due to the burden of manual, fragmented health tracking.
+            </p>
+          </div>
+          <!-- Stat 4 -->
+          <div class="stat-card">
+            <div class="stat-icon-wrapper green">
+              <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+            <div class="stat-number">40%</div>
+            <div class="stat-title">Hospital Readmissions</div>
+            <p class="stat-description">
+              Poor adherence to therapy, dietary limits, and delayed lab review lead to preventable readmissions for liver failure.
+            </p>
+          </div>
+        </div>
+
+        <!-- Emotional Quote -->
+        <div class="quote-container">
+          <p class="quote-text">
+            "We aren't just managing liver disease; we are saving families. By connecting the doctor, the patient, their loved caregiver, and the diagnostics lab, we turn a fragmented, terrifying journey into a shared road to recovery."
+          </p>
+          <div class="quote-author">— LiverLink Clinical Advisory Board</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Role Selector Section -->
+    <section id="selector-section" class="selector-section">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Explore the Care Network</h2>
+          <p class="section-subtitle">Select a perspective below to enter their customized, real-time dashboard.</p>
+        </div>
+
+        <div class="role-grid">
+          <!-- Patient -->
+          <div class="role-card" onclick="openDashboard('patient')">
+            <div class="role-icon-bg cyan-grad">
+              <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+            <h3 class="role-title">Patient Portal</h3>
+            <p class="role-desc">Track medications, log symptoms, view health timelines, and access immediate AI reminders.</p>
+            <div class="role-action-link">
+              <span>Enter Dashboard</span>
+              <svg class="arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Caregiver -->
+          <div class="role-card" onclick="openDashboard('caregiver')">
+            <div class="role-icon-bg emerald-grad">
+              <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></svg>
+            </div>
+            <h3 class="role-title">Caregiver Hub</h3>
+            <p class="role-desc">Stay linked to the patient agent, monitor medication compliance, and receive urgent status alerts.</p>
+            <div class="role-action-link">
+              <span>Enter Dashboard</span>
+              <svg class="arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Doctor -->
+          <div class="role-card" onclick="openDashboard('doctor')">
+            <div class="role-icon-bg teal-grad">
+              <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+              </svg>
+            </div>
+            <h3 class="role-title">Doctor Panel</h3>
+            <p class="role-desc">Monitor patient charts (ALT/AST), manage drug prescriptions, and request targeted lab panels.</p>
+            <div class="role-action-link">
+              <span>Enter Dashboard</span>
+              <svg class="arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Lab -->
+          <div class="role-card" onclick="openDashboard('lab')">
+            <div class="role-icon-bg mint-grad">
+              <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+            </div>
+            <h3 class="role-title">Lab Gateway</h3>
+            <p class="role-desc">Receive diagnostic orders, run digital serum analyses, and instantly upload liver biochemistry results.</p>
+            <div class="role-action-link">
+              <span>Enter Dashboard</span>
+              <svg class="arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mission & Tech Overview -->
+    <section id="about-section" class="about-section">
+      <div class="container">
+        <div class="about-card">
+          <div class="about-content">
+            <h2 class="about-title">A Unified Vision for Liver Care</h2>
+            <p class="about-text">
+              By connecting all parties into a unified state, LiverLink simplifies chronic healthcare. 
+              Changes in one portal flow immediately to the next. When the **Lab** uploads blood work, 
+              the **Doctor** is instantly notified of abnormal ALT/AST levels, adjusting the patient's prescription. 
+              The **Patient** receives the revised dosage on their phone app, and their **Caregiver** gets an automated update ensuring compliance.
+            </p>
+            <div class="feature-bullets">
+              <div class="bullet-item">
+                <span class="bullet-check">✓</span>
+                <span>Real-Time State Synchronization</span>
+              </div>
+              <div class="bullet-item">
+                <span class="bullet-check">✓</span>
+                <span>Targeted AI Caregiver Agent Notifications</span>
+              </div>
+              <div class="bullet-item">
+                <span class="bullet-check">✓</span>
+                <span>Proactive Clinical Warning System</span>
+              </div>
+            </div>
+          </div>
+          <div class="about-visual">
+            <div class="pulse-ring-outer">
+              <div class="pulse-ring-inner">
+                <div class="pulse-center">LL</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Dashboard Container Modal (Initially Hidden) -->
+  <div id="dashboard-overlay" class="dashboard-overlay">
+    
+    <!-- Dashboard Top Bar -->
+    <div class="dashboard-topbar">
+      <div class="container topbar-container">
+        <button class="btn-back" onclick="closeDashboard()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          Back to Portal Selector
+        </button>
+        <div class="current-role-indicator">
+          <span class="role-badge" id="active-role-badge">Patient</span>
+          <span class="role-status" id="active-user-status"><span class="status-dot green"></span> Connected</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Dashboard Area -->
+    <div class="container dashboard-main-content">
+      
+      <!-- PATIENT DASHBOARD VIEW -->
+      <div id="view-patient" class="dashboard-view">
+        <div class="dashboard-grid">
+          <!-- Top Row Left: Patient Info & Summary -->
+          <div class="dashboard-card card-span-2">
+            <div class="card-header">
+              <h3 class="card-title">Patient: John Doe</h3>
+              <span class="badge badge-success">Stable Care Track</span>
+            </div>
+            <div class="patient-summary-grid">
+              <div class="summary-metric">
+                <span class="metric-label">Diagnosis</span>
+                <span class="metric-value">NASH Stage 2</span>
+              </div>
+              <div class="summary-metric">
+                <span class="metric-label">Treatment Plan</span>
+                <span class="metric-value" id="patient-med-name">Ursodiol 300mg</span>
+              </div>
+              <div class="summary-metric">
+                <span class="metric-label">Next Doctor Appointment</span>
+                <span class="metric-value">June 20, 2026</span>
+              </div>
+              <div class="summary-metric">
+                <span class="metric-label">Latest Lab Status</span>
+                <span class="metric-value text-success" id="patient-lab-status">Completed</span>
+              </div>
+            </div>
+            <div class="vital-meters-row">
+              <div class="vital-meter">
+                <div class="vital-label">Overall Health Status</div>
+                <div class="progress-bar-container">
+                  <div class="progress-bar green-bar" style="width: 82%;"></div>
+                </div>
+                <div class="vital-subtext">82% - Stable liver markers</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Row Right: Med Duration & Frequency -->
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h3 class="card-title">Medication Timeline</h3>
+            </div>
+            <div class="timeline-metric-card">
+              <div class="timeline-numbers">
+                <span class="big-num" id="patient-timeline-days">45</span>
+                <span class="sub-num">/ 90 Days completed</span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar cyan-bar" id="patient-timeline-bar" style="width: 50%;"></div>
+              </div>
+              <p class="timeline-hint">You have completed 50% of your current Ursodiol course. Keep going!</p>
+            </div>
+            <div class="frequency-indicator">
+              <span class="indicator-icon">⏰</span>
+              <div>
+                <strong class="freq-title">Frequency Target:</strong>
+                <span class="freq-desc" id="patient-med-frequency">2 times daily (with breakfast & dinner)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Row Left: Today's Reminders & Interactions -->
+          <div class="dashboard-card card-span-2">
+            <div class="card-header">
+              <h3 class="card-title">Today's Reminders</h3>
+              <span class="card-subtitle">Check items off once you've completed them to sync with your Caregiver</span>
+            </div>
+            <div class="reminders-list" id="patient-reminders-list">
+              <!-- Reminders generated dynamically -->
+            </div>
+          </div>
+
+          <!-- Bottom Row Right: Log Symptoms -->
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h3 class="card-title">Symptom Logger</h3>
+              <span class="card-subtitle">Real-time update to your care team</span>
+            </div>
+            <form id="symptom-form" onsubmit="logSymptom(event)">
+              <div class="form-group">
+                <label for="symptom-fatigue">Fatigue Level</label>
+                <select id="symptom-fatigue" class="form-control">
+                  <option value="None">None - Feeling energetic</option>
+                  <option value="Mild" selected>Mild - Normal day-to-day fatigue</option>
+                  <option value="Moderate">Moderate - Tired, resting needed</option>
+                  <option value="Severe">Severe - Constantly exhausted</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="symptom-nausea">Nausea or Abdominal Pain</label>
+                <select id="symptom-nausea" class="form-control">
+                  <option value="None" selected>None</option>
+                  <option value="Mild">Mild bloating</option>
+                  <option value="Moderate">Moderate discomfort</option>
+                  <option value="Severe">Severe pain (Alerts Doctor)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="symptom-jaundice">Jaundice Signs (Yellow skin/eyes)</label>
+                <select id="symptom-jaundice" class="form-control">
+                  <option value="No" selected>No signs detected</option>
+                  <option value="Yes">Yes, slight discoloration (Urgent Alert)</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">Submit Symptoms</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- CAREGIVER DASHBOARD VIEW -->
+      <div id="view-caregiver" class="dashboard-view">
+        <div class="dashboard-grid">
+          <!-- Left Main Card: Caregiver Agent Linked View -->
+          <div class="dashboard-card card-span-2">
+            <div class="card-header">
+              <h3 class="card-title">Caregiver Hub: Monitoring Patient John Doe</h3>
+              <div class="badge-row">
+                <span class="badge badge-success">Agent Linked</span>
+                <span class="badge badge-pulse" id="caregiver-connection-badge">Active Link</span>
+              </div>
+            </div>
+            
+            <div class="agent-monitoring-section">
+              <div class="agent-avatar-row">
+                <div class="agent-status-orb animate-pulse"></div>
+                <div class="agent-details">
+                  <h4 class="agent-name">LiverLink AI Agent v1.2</h4>
+                  <p class="agent-desc">Continuously monitoring compliance patterns, symptom logging frequency, and lab indicators.</p>
+                </div>
+              </div>
+              
+              <!-- Patient current status summary -->
+              <div class="caregiver-patient-status">
+                <h4 class="subheader">Linked Patient Vital Summary</h4>
+                <div class="status-cards-row">
+                  <div class="status-card-small">
+                    <span class="lbl">Medication Adherence</span>
+                    <span class="val" id="caregiver-adherence-val">100%</span>
+                  </div>
+                  <div class="status-card-small">
+                    <span class="lbl">Last Symptom Update</span>
+                    <span class="val" id="caregiver-last-symptom">Mild Fatigue</span>
+                  </div>
+                  <div class="status-card-small">
+                    <span class="lbl">Recent Water Intake</span>
+                    <span class="val">1.8L / 2.5L</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Agent Activity Log (linked directly to actions in patient UI) -->
+            <div class="agent-logs-container">
+              <div class="logs-header">
+                <h4 class="subheader">Agent Notification & Activity Stream</h4>
+                <button class="btn btn-small" onclick="clearAgentLogs()">Clear Logs</button>
+              </div>
+              <div class="agent-logs-list" id="agent-logs-list">
+                <!-- Dynamically filled with events like "Patient checked off medication" or "Lab uploaded AST report" -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Sidebar: Quick Actions & Contacts -->
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h3 class="card-title">Caregiver Action Panel</h3>
+            </div>
+            
+            <div class="caregiver-actions">
+              <button class="btn btn-secondary btn-block" onclick="triggerCaregiverNudge()">
+                🔔 Send Medication Nudge
+              </button>
+              <button class="btn btn-secondary btn-block" onclick="triggerCaregiverCall()">
+                📞 Log Phone Check-in
+              </button>
+              <div class="action-divider"></div>
+              <div class="emergency-box">
+                <h4 class="emergency-title">Emergency Quick-dial</h4>
+                <p class="emergency-desc">Instantly alert Dr. Elizabeth Vance regarding critical jaundice or pain symptoms.</p>
+                <button class="btn btn-danger btn-block" onclick="triggerEmergencyAlert()">
+                  🚨 Trigger Emergency Doctor Alert
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- DOCTOR DASHBOARD VIEW -->
+      <div id="view-doctor" class="dashboard-view">
+        <div class="dashboard-grid">
+          <!-- Left Dashboard Card: Patient Roster & Active Profile -->
+          <div class="dashboard-card card-span-2">
+            <div class="card-header">
+              <h3 class="card-title">Clinical Care Panel - Dr. Elizabeth Vance</h3>
+              <span class="badge badge-info">2 Active Liver Patients</span>
+            </div>
+            
+            <div class="patient-picker-row">
+              <div class="active-patient-selector active" onclick="selectDoctorPatient('John Doe')">
+                <div class="pat-initials font-gradient">JD</div>
+                <div class="pat-info">
+                  <strong>John Doe</strong>
+                  <span>NASH - Stage 2</span>
+                </div>
+              </div>
+              <div class="active-patient-selector" onclick="selectDoctorPatient('Sarah Connor')">
+                <div class="pat-initials font-gradient">SC</div>
+                <div class="pat-info">
+                  <strong>Sarah Connor</strong>
+                  <span>Early Liver Cirrhosis</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="doctor-patient-detail" id="doctor-patient-detail-panel">
+              <h4 class="subheader" id="doctor-detail-patient-name">Patient Health Chart: John Doe</h4>
+              
+              <!-- Custom Interactive Charts (ALT, AST levels) -->
+              <div class="chart-wrapper">
+                <div class="chart-header">
+                  <strong>Liver Enzyme Panel Trend (ALT & AST)</strong>
+                  <span class="text-muted">Target: ALT < 35 U/L, AST < 40 U/L</span>
+                </div>
+                <!-- SVG Chart Container -->
+                <div class="svg-chart-container" id="svg-chart-container">
+                  <!-- Dynamically drawn SVG chart -->
+                </div>
+                <div class="chart-legend">
+                  <span class="legend-item"><span class="legend-color alt-color"></span> ALT (Alanine Aminotransferase)</span>
+                  <span class="legend-item"><span class="legend-color ast-color"></span> AST (Aspartate Aminotransferase)</span>
+                </div>
+              </div>
+
+              <!-- Lab records table -->
+              <div class="medical-record-table">
+                <h4 class="subheader">Biochemistry Lab Records</h4>
+                <table class="clinical-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>ALT (U/L)</th>
+                      <th>AST (U/L)</th>
+                      <th>Bilirubin (mg/dL)</th>
+                      <th>Ordered By</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="doctor-lab-records-tbody">
+                    <!-- Loaded dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Sidebar: Clinical Prescriptions & Diagnostics -->
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h3 class="card-title">Order Treatments & Diagnostics</h3>
+            </div>
+            
+            <div class="doctor-actions">
+              <!-- Medication prescription form -->
+              <div class="prescription-form-section">
+                <h4 class="form-section-title">Modify Prescription</h4>
+                <div class="form-group">
+                  <label for="doctor-prescribe-med">Medication Name</label>
+                  <select id="doctor-prescribe-med" class="form-control">
+                    <option value="Ursodiol 300mg">Ursodiol 300mg</option>
+                    <option value="Obeticholic Acid 5mg">Obeticholic Acid 5mg</option>
+                    <option value="Lactulose Oral Solution">Lactulose Oral Solution</option>
+                    <option value="Tenofovir 300mg">Tenofovir 300mg</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="doctor-prescribe-freq">Frequency Instruction</label>
+                  <select id="doctor-prescribe-freq" class="form-control">
+                    <option value="Once daily in the morning">Once daily in the morning</option>
+                    <option value="2 times daily (with breakfast & dinner)">2 times daily (with breakfast & dinner)</option>
+                    <option value="3 times daily (with meals)">3 times daily (with meals)</option>
+                  </select>
+                </div>
+                <button class="btn btn-primary btn-block" onclick="applyPrescriptionChange()">
+                  💾 Update Prescription
+                </button>
+              </div>
+
+              <div class="action-divider"></div>
+
+              <!-- Request new lab test -->
+              <div class="request-lab-section">
+                <h4 class="form-section-title">Request Diagnostic Test</h4>
+                <p class="section-desc">Instantly dispatch a blood work order to the Clinical Lab Portal.</p>
+                <div class="form-group">
+                  <label for="doctor-lab-panel">Lab Panel Type</label>
+                  <select id="doctor-lab-panel" class="form-control">
+                    <option value="Comprehensive Liver Function Panel">Comprehensive Liver Function Panel</option>
+                    <option value="Basic ALT/AST Screen">Basic ALT/AST Screen</option>
+                    <option value="Hepatic Panel with Bilirubin">Hepatic Panel with Bilirubin</option>
+                  </select>
+                </div>
+                <button class="btn btn-secondary btn-block" onclick="requestLabTest()">
+                  🔬 Request Diagnostic Lab Panel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- LAB DASHBOARD VIEW -->
+      <div id="view-lab" class="dashboard-view">
+        <div class="dashboard-grid">
+          <!-- Left Dashboard Card: Incoming Diagnostic Worklist -->
+          <div class="dashboard-card card-span-2">
+            <div class="card-header">
+              <h3 class="card-title">Diagnostic Worklist - Central Lab #4</h3>
+              <span class="badge badge-purple" id="lab-pending-badge">1 Pending Panel</span>
+            </div>
+            
+            <div class="lab-table-container">
+              <table class="clinical-table">
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Patient Name</th>
+                    <th>Requested Panel</th>
+                    <th>Date Ordered</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="lab-worklist-tbody">
+                  <!-- Loaded dynamically -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Processing Animation Simulated Panel -->
+            <div class="lab-process-simulation hidden" id="lab-simulation-panel">
+              <h4 class="subheader">Running Serum Chemistry Analyzer...</h4>
+              <div class="analyzer-animation-container">
+                <div class="test-tube-wrapper">
+                  <div class="test-tube">
+                    <div class="fluid animate-fill"></div>
+                  </div>
+                  <div class="test-tube-glow"></div>
+                </div>
+                <div class="analyzer-details-text">
+                  <strong id="analyzer-text-status">Centrifuging blood sample...</strong>
+                  <div class="simulation-progress-bar-container">
+                    <div class="simulation-progress-bar" id="lab-sim-progress"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Sidebar: Results Entry Form -->
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h3 class="card-title">Enter Biochemistry Results</h3>
+            </div>
+            
+            <div class="lab-input-form">
+              <form id="lab-entry-form" onsubmit="submitLabResults(event)">
+                <div class="form-group">
+                  <label for="lab-result-patient">Patient</label>
+                  <input type="text" id="lab-result-patient" class="form-control" readonly value="John Doe">
+                </div>
+                <div class="form-group">
+                  <label for="lab-result-panel-name">Panel Name</label>
+                  <input type="text" id="lab-result-panel-name" class="form-control" readonly value="Comprehensive Liver Function Panel">
+                </div>
+                <div class="form-group">
+                  <label for="lab-result-alt">ALT Level (Alanine Aminotransferase) - U/L</label>
+                  <input type="number" id="lab-result-alt" class="form-control" required min="5" max="500" value="48">
+                  <span class="input-help">Normal range: < 35 U/L</span>
+                </div>
+                <div class="form-group">
+                  <label for="lab-result-ast">AST Level (Aspartate Aminotransferase) - U/L</label>
+                  <input type="number" id="lab-result-ast" class="form-control" required min="5" max="500" value="42">
+                  <span class="input-help">Normal range: < 40 U/L</span>
+                </div>
+                <div class="form-group">
+                  <label for="lab-result-bilirubin">Total Bilirubin - mg/dL</label>
+                  <input type="number" id="lab-result-bilirubin" class="form-control" required step="0.1" min="0.1" max="15.0" value="1.1">
+                  <span class="input-help">Normal range: 0.1 - 1.2 mg/dL</span>
+                </div>
+                <button type="submit" id="lab-submit-btn" class="btn btn-primary btn-block">
+                  🔬 Submit Diagnostic Results
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Notification Banner -->
+  <div class="notification-toast" id="notification-toast">
+    <div class="toast-icon">✓</div>
+    <div class="toast-content">
+      <strong class="toast-title">Success</strong>
+      <p class="toast-message">Action processed and state updated.</p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="container footer-container">
+      <p>&copy; 2026 LiverLink - Hackathon Demo. Designed for clinical communication.</p>
+      <div class="footer-meta">
+        <span>Active Session: B3Snz (Forked Remote)</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="index.js"></script>
+</body>
+</html>
