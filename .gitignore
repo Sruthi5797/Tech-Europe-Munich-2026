@@ -5,3 +5,7 @@ my_agent/.env
 
 # macOS system files
 .DS_Store
+
+# Python virtual environment
+.venv/
+venv/
