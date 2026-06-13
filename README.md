@@ -1,136 +1,127 @@
-# LiverLink
+# LiverLink — Chronic Liver Disease Support Platform
 
-> AI-powered care coordination platform that connects labs, doctors, caregivers, and patients to detect deterioration early and prevent avoidable liver disease complications.
+LiverLink is a unified, reactive healthcare platform connecting patients, caregivers, doctors, and diagnostic labs for proactive chronic liver disease (CLD) management. 
 
-**Tech Europe Munich Hackathon 2026**
+By linking real-time web dashboards with specialized AI agents (powered by Google ADK & Gemini 2.5), LiverLink breaks down communication silos and coordinates care proactively.
 
 ---
 
-## The Problem
+## 🏗️ Architecture Overview
 
-Liver disease is a silent killer. Patients deteriorate between appointments, labs go unreviewed, and caregivers are left disconnected from the clinical picture — until it's too late. Avoidable hospitalizations, delayed diagnosis, and fragmented communication are the norm.
-
-## The Solution
-
-LiverLink is an intelligent coordination layer that sits between all stakeholders in a liver patient's journey. Using AI agents powered by Google Gemini, it continuously monitors lab trends, surfaces early warning signals, coordinates care actions, and ensures nothing falls through the cracks.
-
-## How It Works
+The platform operates on a **Unified Origin Architecture** utilizing two primary servers:
 
 ```
-Labs → Lab Analysis Agent → Patient Monitoring Agent → Alert Escalation Agent
-                                      ↓
-                           Care Coordination Agent
-                                      ↓
-              [Doctor] ←→ [Caregiver] ←→ [Patient]
+                  ┌──────────────────────────────────────────┐
+                  │          LiverLink User Interface        │
+                  │   (Main Dashboard & Lab report Scanner)  │
+                  └────────────────────┬─────────────────────┘
+                                       │
+                                       ▼ http://localhost:8080
+                  ┌──────────────────────────────────────────┐
+                  │       LiverLink Proxy/Web Server         │
+                  │            (proxy_server.py)             │
+                  └──────┬────────────────────────────┬──────┘
+                         │                            │
+      Direct API queries │                            │ Route /run & /apps
+      to MongoDB Atlas   │                            │ (A2A Pipelines)
+                         ▼                            ▼ http://localhost:8000
+                  ┌──────────────┐             ┌─────────────────────────────┐
+                  │  MongoDB     │             │     Google ADK Server       │
+                  │  Database    │             │   (Central Orchestrator)    │
+                  └──────────────┘             └─────────────────────────────┘
 ```
 
-1. **Lab results** arrive and are parsed for liver-specific biomarkers (ALT, AST, bilirubin, INR, albumin, MELD score)
-2. **Patient Monitoring Agent** tracks trends over time and flags deterioration patterns
-3. **Alert Escalation Agent** decides severity and routes alerts to the right stakeholder
-4. **Care Coordination Agent** drafts action plans, follow-up tasks, and caregiver instructions
-
-## Agents (Google ADK + Gemini)
-
-| Agent | Status | Role |
-|---|---|---|
-| `patient_checkin` | ✅ Live | Daily check-in companion (Lila) for CLD patients |
-| `lab-analysis` | 🔜 Planned | Parses lab reports, extracts biomarkers, flags anomalies |
-| `patient-monitoring` | 🔜 Planned | Tracks longitudinal trends, computes risk scores |
-| `alert-escalation` | 🔜 Planned | Determines severity, routes alerts to doctor / caregiver |
-| `care-coordination` | 🔜 Planned | Generates care plans and patient-facing summaries |
+1. **Google ADK Agent Server** (Port `8000`): Runs the four specialized AI agents (Lila, Aria, Lab Agent, Hepatology Specialist Agent) and their custom tool registries.
+2. **LiverLink Proxy/Web Server** (Port `8080`): Serves the unified frontend resources and proxies conversational/vision pipelines to the ADK agent endpoints (avoiding CORS and origin mismatches).
 
 ---
 
-## Patient Check-in Agent — Lila 💙
+## 🚀 Step-by-Step Launch Guide
 
-> "Good morning! It's so good to see you checking in today..."
+Follow these simple steps to run the complete, connected fullstack application:
 
-**Lila** is a compassionate AI companion that conducts a structured daily health
-check-in for patients living with Chronic Liver Disease. Every conversation covers:
-
-| # | Check-in Topic | Why It Matters for CLD |
-|---|---|---|
-| 1 | 💊 **Medications** | Adherence is the cornerstone of liver disease management |
-| 2 | 🌙 **Sleep quality** | CLD disrupts sleep; poor rest worsens inflammation |
-| 3 | 🥚 **Protein intake** | Too little = muscle wasting; too much = HE risk |
-| 4 | 💧 **Water consumption** | Hydration supports kidneys and prevents HRS |
-| 5 | 🧂 **Salt / sodium** | Low-sodium diet is critical to managing ascites |
-| 6 | 💙 **How you're feeling** | Catches mood, fatigue, and red-flag symptoms early |
-| 7 | 🤲 **Hand AI test** *(optional)* | Screens for early hepatic encephalopathy via hand movement |
-
-Lila uses **7 structured logging tools** to persist each data point, and flags
-red-flag symptoms (confusion, jaundice, vomiting blood) for immediate escalation.
+### Prerequisites
+Make sure you have your virtual environment configured and your `.env` file populated at the project root with the following keys:
+* `GOOGLE_API_KEY` (Gemini model operations)
+* `MONGODB_URI` (MongoDB Atlas connectivity)
+* `MONGODB_DB` (defaults to `liverlink`)
+* `TAVILY_API_KEY` (Web search capabilities for the clinician consultant)
 
 ---
 
-## Project Structure
+### Step 1: Start the Google ADK Agent Server
+This initializes the central orchestrator and registers the tools (e.g. database adapters, MELD-Na calculators, and web engines).
+
+```bash
+# Navigate to the agents workspace
+cd backend/agents
+
+# Launch the ADK server
+../../.venv/bin/adk web
+```
+* **Developer Chat Playground**: Access the direct conversation interface at [http://127.0.0.1:8000/](http://127.0.0.1:8000/). Talk to Lila, Aria, or Dr. Vance directly to verify tools are binding correctly.
+
+---
+
+### Step 2: Start the LiverLink Proxy/Web Server
+This serves the front-end pages and routes MongoDB updates and pipeline queries securely.
+
+```bash
+# In a new terminal window, navigate to the root directory
+# Run the proxy server script
+.venv/bin/python backend/proxy_server.py
+```
+* **Interactive Portal Dashboard**: Open your browser of choice to [http://127.0.0.1:8080/](http://127.0.0.1:8080/).
+
+---
+
+## 🎛️ Interaction Guide
+
+Here is how to demonstrate and test the live fullstack capabilities:
+
+### Mode A: AI-Powered Lab Report Scanner
+* Navigate to `http://127.0.0.1:8080/scanner` (or click **AI Lab Scanner** in the website header).
+* Upload or drag & drop one of the pre-built sample patient reports from the `data/test_data/` directories.
+* Click **Analyse Report**.
+* **What happens behind the scenes**:
+  1. The **Lab Agent** extracts biomarkers and correlates with prior patient history in MongoDB to produce trend vectors.
+  2. The **Hepatology Specialist Agent** ingests those trends, calculates scores (MELD-Na/Child-Pugh), determines the injury pattern, and produces a medical recommendation list.
+  3. The structured responses are synchronized and dynamically drawn onto the dashboard.
+
+### Mode B: Patient-to-Caregiver Communication (A2A Alert Sync)
+1. Open the **Patient Portal** from the main dashboard view at [http://127.0.0.1:8080/](http://127.0.0.1:8080/).
+2. Submit symptoms like **Jaundice** or severe nausea through the symptom logger.
+3. Behind the scenes, the Patient Portal issues a secure request to MongoDB, creating critical warnings.
+4. Open the **Caregiver Hub** from the selector. The live activity stream will automatically update with an alert generated directly by the underlying companion agent!
+
+### Mode C: Doctor Treatment Adjustment
+1. Enter the **Doctor Panel** dashboard.
+2. Review the live biochemistry chart (drawn dynamically from patient records in your MongoDB).
+3. Modify a treatment plan (e.g., prescribing *Obeticholic Acid*) and click **Update Prescription**.
+4. The change is registered immediately. The next time the patient enters their portal, their checklist target is automatically recreated based on the real medical order.
+
+---
+
+## 🏗️ Project Structure
 
 ```
 Tech-Europe-Munich-2026/
-├── .env.example                    # Environment variable template
-├── .gitignore
-├── README.md
-├── frontend/                       # UI files (HTML, CSS, JS)
-├── backend/                        # Python backend and ADK agents
+├── .env                            # Environment keys (Google Gemini, MongoDB, Tavily)
+├── README.md                       # Comprehensive guide (this file)
+├── frontend/                       # Interactive User Interfaces
+│   ├── index.html                  # Stakeholder Dashboard
+│   ├── index.css                   # Theme and component styles
+│   ├── index.js                    # State synchronizer & Chart engine
+│   └── upload.html                 # Vision-powered AI Scanner
+├── backend/                        # Backend architecture
 │   ├── requirements.txt            # Python dependencies
-│   ├── LiverLink/                  # Proxy server and Lab pipeline
-│   └── agents/                     # ADK agent packages
-│       └── patient_checkin/        # ADK agent package (run `adk web` from here)
-│           ├── __init__.py         # Exports root_agent (required by ADK)
-│           ├── agent.py            # Agent definition — model, tools, description
-│           ├── prompts.py          # Full system instruction for Lila
-│           └── tools.py            # 7 logging tools (medications, sleep, protein…)
-├── data/                           # Datasets
+│   ├── proxy_server.py             # FastAPI Server & Proxy gateway
+│   └── agents/                     # Google ADK agent configurations
+│       ├── orchestrator/           # Central routing agent
+│       ├── patient_agent/          # Daily companion (Lila)
+│       ├── caregiver_agent/        # Supporter companion (Aria)
+│       ├── lab_agent/              # Biochemical extractor
+│       ├── doctor_agent/           # Hepatology clinical consultant
+│       └── shared/                 # MongoDB database adapter
 ```
 
----
-
-## Tech Stack
-
-- **AI / Agents**: [Google ADK](https://google.github.io/adk-docs/) + Gemini 2.0 Flash
-- **Backend**: Python (FastAPI) *(coming soon)*
-- **Data**: JSON structured logs → FHIR-compatible patient records
-- **Alerts**: Webhook / push notification layer *(coming soon)*
-
----
-
-## Getting Started
-
-### 1. Clone & install
-
-```bash
-git clone https://github.com/your-org/liverlink
-cd Tech-Europe-Munich-2026
-
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-
-pip install -r requirements.txt
-```
-
-### 2. Set your API key
-
-```bash
-cp .env.example .env
-# Edit .env and add your GOOGLE_API_KEY from https://aistudio.google.com/app/apikey
-```
-
-### 3. Run the Patient Check-in Agent
-
-```bash
-cd agents
-adk web                          # Opens the ADK dev UI at http://localhost:8000
-```
-
-Or run from the terminal:
-
-```bash
-cd agents
-adk run patient_checkin
-```
-
----
-
-## Team
-
-Built at Tech Europe Munich Hackathon 2026.

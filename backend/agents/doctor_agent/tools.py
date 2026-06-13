@@ -482,14 +482,26 @@ def get_patient_comprehensive_profile(patient_query: str) -> dict:
         # Default to None
         ascites_status = "None"
         encephalopathy_status = "None"
+        jaundice_detected = False
 
-        # Check latest db logs for mood/symptoms or fatigue that mention HE/ascites
+        # Check latest db logs for mood/symptoms or fatigue that mention HE/ascites/jaundice
         for log in db_logs:
             data_log = log.get("data", {})
-            if "confusion" in str(data_log) or "forgetfulness" in str(data_log):
+            if "confusion" in str(data_log) or "forgetfulness" in str(data_log) or "encephalopathy" in str(data_log).lower():
                 encephalopathy_status = "Grade I-II"
             if "swelling" in str(data_log) or "ascites" in str(data_log):
                 ascites_status = "Mild"
+            if data_log.get("jaundice_str") == "Yes" or data_log.get("jaundice") == "Yes" or "jaundice" in str(data_log).lower():
+                jaundice_detected = True
+
+        # Also check unacknowledged caregiver alerts for symptoms
+        for alert in db_alerts:
+            if not alert.get("acknowledged", False):
+                msg = str(alert.get("message", "")).lower()
+                if "jaundice" in msg:
+                    jaundice_detected = True
+                if "encephalopathy" in msg or "confusion" in msg or "asterixis" in msg:
+                    encephalopathy_status = "Grade I-II"
 
         points = 0
         # bilirubin points
@@ -587,20 +599,20 @@ def get_patient_comprehensive_profile(patient_query: str) -> dict:
             "Obtain daily liver panels, renal panels, and coagulation studies (PT/INR).",
             "Screen for active decompensation events (ascites, variceal bleeding, spontaneous bacterial peritonitis)."
         ]
-    elif m_score >= 15 or extreme_transaminases or extreme_bilirubin or extreme_inr or extreme_albumin or (child_pugh_result and child_pugh_result["class"] in ("B", "C")):
-        transplant_evaluation_recommended = m_score >= 15 or (child_pugh_result and child_pugh_result["class"] in ("B", "C"))
-        is_emergency = extreme_transaminases or extreme_bilirubin or extreme_inr or extreme_albumin
-        severity = "Urgent / High Risk"
-        alert_message = "HIGH RISK: Signs of active hepatic injury or synthetic dysfunction detected. Close clinical review recommended."
+    elif m_score >= 15 or extreme_transaminases or extreme_bilirubin or extreme_inr or extreme_albumin or jaundice_detected or (encephalopathy_status != "None") or (child_pugh_result and child_pugh_result["class"] in ("B", "C")):
+        transplant_evaluation_recommended = m_score >= 15 or (child_pugh_result and child_pugh_result["class"] in ("B", "C")) or (encephalopathy_status != "None") or jaundice_detected
+        is_emergency = extreme_transaminases or extreme_bilirubin or extreme_inr or extreme_albumin or jaundice_detected or (encephalopathy_status != "None")
+        severity = "EMERGENCY / HIGH RISK"
+        alert_message = "CRITICAL EMERGENCY: Signs of active hepatic decompensation, including Jaundice and/or potential Hepatic Encephalopathy, have been detected in patient check-in/telemetry logs!"
         if transplant_evaluation_recommended:
-            alert_message += f" Referral for liver transplant evaluation is recommended (MELD-Na: {m_score}, Child-Pugh: {child_pugh_result['class'] if child_pugh_result else 'N/A'})."
-        followup_schedule = "Urgent hepatology check (within 1-2 weeks)"
+            alert_message += f" Referral for liver transplant evaluation is urgently recommended (MELD-Na: {m_score}, Child-Pugh: {child_pugh_result['class'] if child_pugh_result else 'N/A'})."
+        followup_schedule = "Immediate Clinical Evaluation (within 24 hours)"
         followup_actions = [
-            "Refer for liver transplant evaluation if not already initiated.",
-            "Schedule a clinical hepatology check within 1 to 2 weeks.",
-            "Perform baseline screening or repeat LFT panel in 7 days to monitor velocity.",
-            "Initiate decompensation prophylaxis: start diuretic titration for ascites if present, or lactulose titration for HE.",
-            "Schedule abdominal ultrasound/imaging for HCC screening within 30 days."
+            "Urgently refer for liver transplant evaluation (MELD-Na / Child-Pugh class B/C).",
+            "Initiate immediate clinical workup for hepatic encephalopathy: start or titrate Lactulose oral solution to achieve 2-3 soft bowel movements per day.",
+            "Add Rifaximin (550 mg twice daily) as secondary prevention against overt encephalopathy recurrence.",
+            "Advise the caregiver (Aria) to monitor neurological status closely (orientation, hand flapping/asterixis) and report any slurred speech or somnolence.",
+            "Arrange for urgent blood draw including repeat liver function tests, serum ammonia, renal panel, and coagulation studies (PT/INR)."
         ]
     elif alt is not None and (alt > 56.0 or ast > 40.0 or bili > 1.2 or alb < 3.5 or inr > 1.2):
         severity = "Moderate Risk / Mildly Abnormal"

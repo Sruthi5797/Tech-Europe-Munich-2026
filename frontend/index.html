@@ -37,6 +37,7 @@
       <nav class="nav-links">
         <a href="#stats-section">The Crisis</a>
         <a href="#selector-section">Dashboards</a>
+        <a href="/scanner" style="color: var(--accent-cyan); font-weight: 600;">🔬 AI Lab Scanner</a>
         <a href="#about-section">Our Mission</a>
       </nav>
       <button class="btn btn-primary" onclick="scrollToSelector()">Launch Demo</button>
@@ -154,87 +155,110 @@
       </div>
     </section>
 
-    <!-- Role Selector Section -->
+    <!-- Role Selector Section (Multi-Agent Team Selector) -->
     <section id="selector-section" class="selector-section">
       <div class="container">
         <div class="section-header">
-          <h2 class="section-title">Explore the Care Network</h2>
-          <p class="section-subtitle">Select a perspective below to enter their customized, real-time dashboard.</p>
+          <h2 class="section-title">Interact with our Specialist AI Agents</h2>
+          <p class="section-subtitle">Select a specialist AI agent below to explore their synchronized care flow and open their respective workspace.</p>
         </div>
 
-        <div class="role-grid">
-          <!-- Patient -->
-          <div class="role-card" onclick="openDashboard('patient')">
-            <div class="role-icon-bg cyan-grad">
-              <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
+        <div class="role-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+          <!-- 1. Lila: Patient Companion Agent -->
+          <div class="role-card" onclick="openAgentDashboard('lila')" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 280px; padding: 24px;">
+            <div>
+              <div class="role-icon-bg cyan-grad" style="margin-bottom: 16px;">
+                <span style="font-size: 24px;">🤖</span>
+              </div>
+              <h3 class="role-title">Lila</h3>
+              <span class="role-badge" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); font-size: 10px; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-bottom: 12px; font-weight: 700;">Patient Portal Companion</span>
+              <p class="role-desc" style="font-size: 12.5px; line-height: 1.4; color: var(--color-text-secondary);">Conducts empathetic daily health check-ins, tracks clinical variables, and guides safe, restorative stretching and yoga.</p>
             </div>
-            <h3 class="role-title">Patient Portal</h3>
-            <p class="role-desc">Track medications, log symptoms, view health timelines, and access immediate AI reminders.</p>
-            <div class="role-action-link">
-              <span>Enter Dashboard</span>
-              <svg class="arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="role-action-link" style="margin-top: 16px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--accent-cyan);">
+              <span>Activate Lila Chat</span>
+              <svg class="arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 14px; height: 14px;">
                 <line x1="5" y1="12" x2="19" y2="12"></line>
                 <polyline points="12 5 19 12 12 19"></polyline>
               </svg>
             </div>
           </div>
 
-          <!-- Caregiver -->
-          <div class="role-card" onclick="openDashboard('caregiver')">
-            <div class="role-icon-bg emerald-grad">
-              <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></svg>
+          <!-- 2. Aria: Caregiver Support Agent -->
+          <div class="role-card" onclick="openAgentDashboard('aria')" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 280px; padding: 24px;">
+            <div>
+              <div class="role-icon-bg emerald-grad" style="margin-bottom: 16px;">
+                <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></svg>
+              </div>
+              <h3 class="role-title">Aria</h3>
+              <span class="role-badge" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); font-size: 10px; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-bottom: 12px; font-weight: 700;">Caregiver Hub Companion</span>
+              <p class="role-desc" style="font-size: 12.5px; line-height: 1.4; color: var(--color-text-secondary);">Audits patient compliance metrics, processes active alerts, and generates detailed daily care summaries for family members.</p>
             </div>
-            <h3 class="role-title">Caregiver Hub</h3>
-            <p class="role-desc">Stay linked to the patient agent, monitor medication compliance, and receive urgent status alerts.</p>
-            <div class="role-action-link">
-              <span>Enter Dashboard</span>
-              <svg class="arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="role-action-link" style="margin-top: 16px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--accent-emerald);">
+              <span>Open Caregiver Hub</span>
+              <svg class="arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 14px; height: 14px;">
                 <line x1="5" y1="12" x2="19" y2="12"></line>
                 <polyline points="12 5 19 12 12 19"></polyline>
               </svg>
             </div>
           </div>
 
-          <!-- Doctor -->
-          <div class="role-card" onclick="openDashboard('doctor')">
-            <div class="role-icon-bg teal-grad">
-              <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-              </svg>
+          <!-- 3. Hepatology Decision Agent -->
+          <div class="role-card" onclick="openAgentDashboard('specialist')" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 280px; padding: 24px;">
+            <div>
+              <div class="role-icon-bg teal-grad" style="margin-bottom: 16px;">
+                <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                </svg>
+              </div>
+              <h3 class="role-title">Clinical Specialist</h3>
+              <span class="role-badge" style="background: rgba(20, 184, 166, 0.15); color: var(--accent-teal); font-size: 10px; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-bottom: 12px; font-weight: 700;">Hepatologist Decision Agent</span>
+              <p class="role-desc" style="font-size: 12.5px; line-height: 1.4; color: var(--color-text-secondary);">Provides clinical decision support, calculates liver transplant priority scores (MELD-Na), and stages early cirrhosis.</p>
             </div>
-            <h3 class="role-title">Doctor Panel</h3>
-            <p class="role-desc">Monitor patient charts (ALT/AST), manage drug prescriptions, and request targeted lab panels.</p>
-            <div class="role-action-link">
-              <span>Enter Dashboard</span>
-              <svg class="arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="role-action-link" style="margin-top: 16px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--accent-teal);">
+              <span>Access Doctor Panel</span>
+              <svg class="arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 14px; height: 14px;">
                 <line x1="5" y1="12" x2="19" y2="12"></line>
                 <polyline points="12 5 19 12 12 19"></polyline>
               </svg>
             </div>
           </div>
 
-          <!-- Lab -->
-          <div class="role-card" onclick="openDashboard('lab')">
-            <div class="role-icon-bg mint-grad">
-              <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-              </svg>
+          <!-- 4. Lab Analyzer Agent -->
+          <div class="role-card" onclick="openAgentDashboard('lab')" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 280px; padding: 24px;">
+            <div>
+              <div class="role-icon-bg mint-grad" style="margin-bottom: 16px;">
+                <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+              </div>
+              <h3 class="role-title">Lab Agent</h3>
+              <span class="role-badge" style="background: rgba(52, 211, 153, 0.15); color: #34d399; font-size: 10px; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-bottom: 12px; font-weight: 700;">Chemistry Serum Agent</span>
+              <p class="role-desc" style="font-size: 12.5px; line-height: 1.4; color: var(--color-text-secondary);">Parses raw biochemistry reports to extract liver enzymes (ALT/AST), flags anomalies, and updates patient timelines.</p>
             </div>
-            <h3 class="role-title">Lab Gateway</h3>
-            <p class="role-desc">Receive diagnostic orders, run digital serum analyses, and instantly upload liver biochemistry results.</p>
-            <div class="role-action-link">
-              <span>Enter Dashboard</span>
-              <svg class="arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="role-action-link" style="margin-top: 16px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #34d399;">
+              <span>Dispatch Lab Order</span>
+              <svg class="arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 14px; height: 14px;">
                 <line x1="5" y1="12" x2="19" y2="12"></line>
                 <polyline points="12 5 19 12 12 19"></polyline>
               </svg>
             </div>
           </div>
+        </div>
+
+        <!-- LIVE CLINICAL EMERGENCY ORCHESTRATION PANEL -->
+        <div class="emergency-simulation-strip" style="background: rgba(239, 68, 68, 0.04); border: 1px solid rgba(239, 68, 68, 0.15); border-radius: 12px; margin-top: 24px; padding: 20px; display: flex; align-items: center; justify-content: space-between; gap: 24px;">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div class="emergency-alarm-icon" style="font-size: 28px; animation: statusPulse 1.5s infinite;">🚨</div>
+            <div>
+              <h4 style="font-size: 14px; font-weight: 700; color: #ef4444; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Live Orchestrator Emergency Dispatcher</h4>
+              <p style="font-size: 12px; color: var(--color-text-secondary); line-height: 1.4; max-width: 600px;">Simulate severe patient symptoms. The Orchestrator will intercept, update patient records in MongoDB, and broadcast alerts across Aria, the Hepatology Specialist, and Dr. Vance's clinical terminal.</p>
+            </div>
+          </div>
+          <button id="btn-simulate-emergency" class="btn btn-secondary" onclick="toggleSimulatedEmergency()" style="background-color: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: #ef4444; font-weight: 700; transition: var(--transition-smooth); outline: none;">
+            ⚠️ Simulate Patient Emergency
+          </button>
         </div>
       </div>
     </section>
@@ -305,10 +329,117 @@
       <!-- PATIENT DASHBOARD VIEW -->
       <div id="view-patient" class="dashboard-view">
         <div class="dashboard-grid">
+          <!-- TOP FULL-WIDTH STRIP: LIVE HEALTH VITAL CARD (Pulls from MongoDB) -->
+          <div class="dashboard-card card-span-3" style="grid-column: span 3; padding: 16px 28px;">
+            <div class="card-header" style="margin-bottom: 12px; align-items: center;">
+              <div>
+                <h3 class="card-title" style="font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                  <span>📈</span> My Daily Health Tracker Vitals 
+                  <span class="badge badge-info" id="db-connection-status" style="font-size: 10px; padding: 2px 8px; font-family: sans-serif; text-transform: uppercase;">Live DB Sync</span>
+                </h3>
+              </div>
+            </div>
+            
+            <div class="vitals-grid-row">
+              <!-- Sleep -->
+              <div class="vital-counter-card" style="padding: 10px; display: flex; align-items: center; justify-content: space-between; text-align: left; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="v-icon" style="font-size: 1.3rem;">🌙</span>
+                  <div>
+                    <span class="v-lbl" style="font-size: 10px; display: block;">Sleep Duration</span>
+                    <span class="v-sub" id="vital-sleep-sub" style="font-size: 9px; display: block; color: var(--color-text-secondary);">Quality: Good</span>
+                  </div>
+                </div>
+                <div class="svg-ring-container" style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <svg class="progress-ring" width="44" height="44">
+                    <circle class="progress-ring__background" stroke="rgba(255, 255, 255, 0.05)" stroke-width="3.5" fill="transparent" r="17" cx="22" cy="22"/>
+                    <circle id="ring-sleep-circle" class="progress-ring__circle" stroke="var(--accent-cyan)" stroke-width="3.5" stroke-dasharray="106.8" stroke-dashoffset="106.8" fill="transparent" r="17" cx="22" cy="22" style="transition: stroke-dashoffset 0.5s ease; transform: rotate(-90deg); transform-origin: 50% 50%; stroke-linecap: round;"/>
+                  </svg>
+                  <div class="v-val" id="vital-sleep" style="position: absolute; font-size: 9.5px; font-weight: 700; color: #fff;">7.8h</div>
+                </div>
+              </div>
+              
+              <!-- Protein -->
+              <div class="vital-counter-card" style="padding: 10px; display: flex; align-items: center; justify-content: space-between; text-align: left; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="v-icon" style="font-size: 1.3rem;">🥚</span>
+                  <div>
+                    <span class="v-lbl" style="font-size: 10px; display: block;">Protein Intake</span>
+                    <span class="v-sub" style="font-size: 9px; display: block; color: var(--color-text-secondary);">Goal: 70-90g</span>
+                  </div>
+                </div>
+                <div class="svg-ring-container" style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <svg class="progress-ring" width="44" height="44">
+                    <circle class="progress-ring__background" stroke="rgba(255, 255, 255, 0.05)" stroke-width="3.5" fill="transparent" r="17" cx="22" cy="22"/>
+                    <circle id="ring-protein-circle" class="progress-ring__circle" stroke="var(--accent-emerald)" stroke-width="3.5" stroke-dasharray="106.8" stroke-dashoffset="106.8" fill="transparent" r="17" cx="22" cy="22" style="transition: stroke-dashoffset 0.5s ease; transform: rotate(-90deg); transform-origin: 50% 50%; stroke-linecap: round;"/>
+                  </svg>
+                  <div class="v-val" id="vital-protein" style="position: absolute; font-size: 9.5px; font-weight: 700; color: #fff;">80g</div>
+                </div>
+              </div>
+              
+              <!-- Water -->
+              <div class="vital-counter-card" style="padding: 10px; display: flex; align-items: center; justify-content: space-between; text-align: left; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="v-icon" style="font-size: 1.3rem;">💧</span>
+                  <div>
+                    <span class="v-lbl" style="font-size: 10px; display: block;">Hydration</span>
+                    <span class="v-sub" style="font-size: 9px; display: block; color: var(--color-text-secondary);">Goal: 2.5L</span>
+                  </div>
+                </div>
+                <div class="svg-ring-container" style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <svg class="progress-ring" width="44" height="44">
+                    <circle class="progress-ring__background" stroke="rgba(255, 255, 255, 0.05)" stroke-width="3.5" fill="transparent" r="17" cx="22" cy="22"/>
+                    <circle id="ring-water-circle" class="progress-ring__circle" stroke="#3b82f6" stroke-width="3.5" stroke-dasharray="106.8" stroke-dashoffset="106.8" fill="transparent" r="17" cx="22" cy="22" style="transition: stroke-dashoffset 0.5s ease; transform: rotate(-90deg); transform-origin: 50% 50%; stroke-linecap: round;"/>
+                  </svg>
+                  <div class="v-val" id="vital-water" style="position: absolute; font-size: 9.5px; font-weight: 700; color: #fff;">2.7L</div>
+                </div>
+              </div>
+              
+              <!-- Sodium -->
+              <div class="vital-counter-card" style="padding: 10px; display: flex; align-items: center; justify-content: space-between; text-align: left; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="v-icon" style="font-size: 1.3rem;">🧂</span>
+                  <div>
+                    <span class="v-lbl" style="font-size: 10px; display: block;">Sodium Intake</span>
+                    <span class="v-sub" id="vital-salt-sub" style="font-size: 9px; display: block; color: var(--color-text-secondary);">Limit: < 5.0g</span>
+                  </div>
+                </div>
+                <div class="svg-ring-container" style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <svg class="progress-ring" width="44" height="44">
+                    <circle class="progress-ring__background" stroke="rgba(255, 255, 255, 0.05)" stroke-width="3.5" fill="transparent" r="17" cx="22" cy="22"/>
+                    <circle id="ring-salt-circle" class="progress-ring__circle" stroke="#ea580c" stroke-width="3.5" stroke-dasharray="106.8" stroke-dashoffset="106.8" fill="transparent" r="17" cx="22" cy="22" style="transition: stroke-dashoffset 0.5s ease; transform: rotate(-90deg); transform-origin: 50% 50%; stroke-linecap: round;"/>
+                  </svg>
+                  <div class="v-val" id="vital-salt" style="position: absolute; font-size: 9.5px; font-weight: 700; color: #fff;">3.6g</div>
+                </div>
+              </div>
+              
+              <!-- Weight -->
+              <div class="vital-counter-card" style="padding: 10px; display: flex; align-items: center; justify-content: space-between; text-align: left; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="v-icon" style="font-size: 1.3rem;">⚖️</span>
+                  <div>
+                    <span class="v-lbl" style="font-size: 10px; display: block;">Body Weight</span>
+                    <span class="v-sub" style="font-size: 9px; display: block; color: var(--color-text-secondary);">Status: Stable</span>
+                  </div>
+                </div>
+                <div class="svg-ring-container" style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <svg class="progress-ring" width="44" height="44">
+                    <circle class="progress-ring__background" stroke="rgba(255, 255, 255, 0.05)" stroke-width="3.5" fill="transparent" r="17" cx="22" cy="22"/>
+                    <circle id="ring-weight-circle" class="progress-ring__circle" stroke="#a855f7" stroke-width="3.5" stroke-dasharray="106.8" stroke-dashoffset="106.8" fill="transparent" r="17" cx="22" cy="22" style="transition: stroke-dashoffset 0.5s ease; transform: rotate(-90deg); transform-origin: 50% 50%; stroke-linecap: round;"/>
+                  </svg>
+                  <div class="v-val" id="vital-weight" style="position: absolute; font-size: 9.5px; font-weight: 700; color: #fff;">78.0k</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Top Row Left: Patient Info & Summary -->
-          <div class="dashboard-card card-span-2">
+          <div class="dashboard-card card-span-2" style="grid-column: span 2;">
             <div class="card-header">
-              <h3 class="card-title">Patient: John Doe</h3>
+              <div class="title-with-subtitle">
+                <h3 class="card-title">Patient Portal: John Doe</h3>
+                <span class="card-subtitle">Welcome back, John! Your daily health is our shared priority. 🌿</span>
+              </div>
               <span class="badge badge-success">Stable Care Track</span>
             </div>
             <div class="patient-summary-grid">
@@ -317,98 +448,232 @@
                 <span class="metric-value">NASH Stage 2</span>
               </div>
               <div class="summary-metric">
-                <span class="metric-label">Treatment Plan</span>
+                <span class="metric-label">Prescribed Regimen</span>
                 <span class="metric-value" id="patient-med-name">Ursodiol 300mg</span>
               </div>
               <div class="summary-metric">
-                <span class="metric-label">Next Doctor Appointment</span>
+                <span class="metric-label">Next Doctor Consult</span>
                 <span class="metric-value">June 20, 2026</span>
               </div>
               <div class="summary-metric">
-                <span class="metric-label">Latest Lab Status</span>
+                <span class="metric-label">Latest Labs</span>
                 <span class="metric-value text-success" id="patient-lab-status">Completed</span>
               </div>
             </div>
-            <div class="vital-meters-row">
+            <div class="vital-meters-row" style="margin-top: 15px;">
               <div class="vital-meter">
-                <div class="vital-label">Overall Health Status</div>
+                <div class="vital-label" style="display: flex; justify-content: space-between;">
+                  <span>Overall Liver Health Index</span>
+                  <strong style="color: var(--accent-cyan);">82%</strong>
+                </div>
                 <div class="progress-bar-container">
                   <div class="progress-bar green-bar" style="width: 82%;"></div>
                 </div>
-                <div class="vital-subtext">82% - Stable liver markers</div>
+                <div class="vital-subtext">Vitals are stable. AST/ALT indices trending downwards.</div>
               </div>
             </div>
           </div>
 
           <!-- Top Row Right: Med Duration & Frequency -->
-          <div class="dashboard-card">
+          <div class="dashboard-card" style="grid-column: span 1;">
             <div class="card-header">
-              <h3 class="card-title">Medication Timeline</h3>
+              <h3 class="card-title">Therapy Adherence</h3>
             </div>
             <div class="timeline-metric-card">
               <div class="timeline-numbers">
                 <span class="big-num" id="patient-timeline-days">45</span>
-                <span class="sub-num">/ 90 Days completed</span>
+                <span class="sub-num">/ 90 Days Completed</span>
               </div>
               <div class="progress-bar-container">
                 <div class="progress-bar cyan-bar" id="patient-timeline-bar" style="width: 50%;"></div>
               </div>
-              <p class="timeline-hint">You have completed 50% of your current Ursodiol course. Keep going!</p>
+              <p class="timeline-hint">You are halfway through your current course. You're doing incredible! 💊</p>
             </div>
-            <div class="frequency-indicator">
+            <div class="frequency-indicator" style="background: rgba(255, 255, 255, 0.02); border-radius: 8px; padding: 10px; margin-top: 10px;">
               <span class="indicator-icon">⏰</span>
               <div>
-                <strong class="freq-title">Frequency Target:</strong>
-                <span class="freq-desc" id="patient-med-frequency">2 times daily (with breakfast & dinner)</span>
+                <strong class="freq-title" style="font-size: 0.85rem;">Target:</strong>
+                <span class="freq-desc" id="patient-med-frequency" style="font-size: 0.8rem; color: var(--color-text-secondary);">2x daily (with breakfast & dinner)</span>
               </div>
             </div>
           </div>
 
-          <!-- Bottom Row Left: Today's Reminders & Interactions -->
-          <div class="dashboard-card card-span-2">
+          <!-- Bottom Row Left: Ammonia Detector & Exercise Trainer -->
+          <div class="dashboard-card card-span-2" style="grid-column: span 2;">
             <div class="card-header">
-              <h3 class="card-title">Today's Reminders</h3>
-              <span class="card-subtitle">Check items off once you've completed them to sync with your Caregiver</span>
+              <div class="title-with-subtitle">
+                <h3 class="card-title">Advanced Patient Applications</h3>
+                <span class="card-subtitle">Click to invoke intelligent AI scanning or launch custom training programs</span>
+              </div>
             </div>
-            <div class="reminders-list" id="patient-reminders-list">
-              <!-- Reminders generated dynamically -->
+            
+            <div class="app-cards-container">
+              <!-- Application 1: Hand AI Ammonia Detector -->
+              <div class="app-launch-card">
+                <div class="app-icon-badge yellow-glow">🤲</div>
+                <div class="app-details-block">
+                  <h4 class="app-name-text">Hand AI Ammonia Level App</h4>
+                  <p class="app-description-text">Scan eye coordination and finger micro-tremors to detect potential blood ammonia level surges early.</p>
+                  <div class="app-results-row">
+                    <span>Latest Reading: <strong id="patient-ammonia-text" class="text-success">32.1 ppm (Normal)</strong></span>
+                  </div>
+                  <button class="btn btn-secondary btn-small" onclick="launchAmmoniaScanner()">
+                    📸 Run Hand AI Ammonia Scan
+                  </button>
+                </div>
+              </div>
+
+              <!-- Application 2: Physical Coach Jax -->
+              <div class="app-launch-card">
+                <div class="app-icon-badge purple-glow">🏃‍♂️</div>
+                <div class="app-details-block">
+                  <h4 class="app-name-text">Jax: Gentle Daily Exercise Trainer</h4>
+                  <p class="app-description-text">Prevents muscle loss (sarcopenia) with custom-fit, liver-friendly gentle stretches and walks.</p>
+                  <div class="app-results-row">
+                    <span>Today's Status: <strong id="patient-exercise-text" class="text-success">Yoga (30 mins) Completed</strong></span>
+                  </div>
+                  <button class="btn btn-secondary btn-small" onclick="launchExerciseTrainer()">
+                    🧘‍♂️ Open Workout Coach Jax
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- In-Page Interactive Hand AI Camera Scan Mockup -->
+            <div id="hand-ai-scanner-section" class="hand-ai-scanner-section hidden" style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+              <div class="scanner-header-row">
+                <h4 style="color: var(--accent-cyan); display: flex; align-items: center; gap: 8px;">
+                  <span class="pulse-dot-cyan"></span> Hand AI Camera Analysis
+                </h4>
+                <button class="btn-close-scanner" onclick="closeAmmoniaScanner()">Close App</button>
+              </div>
+              <div class="scanner-viewport-wrapper">
+                <div class="scanner-viewport">
+                  <div class="camera-simulation">
+                    <div class="scan-line"></div>
+                    <div class="hand-silhouette">🤲</div>
+                    <div class="target-box"></div>
+                    <div class="scanner-glow-circle"></div>
+                  </div>
+                  <div class="scanner-telemetry">
+                    <p id="scanner-status-text">Aligning hand with clinical guide...</p>
+                    <div class="simulation-progress-bar-container">
+                      <div class="simulation-progress-bar" id="scanner-progress"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Bottom Row Right: Log Symptoms -->
-          <div class="dashboard-card">
+          <!-- Bottom Row Right: Symptom Logger & Reminders -->
+          <div class="dashboard-card" style="grid-column: span 1;">
             <div class="card-header">
-              <h3 class="card-title">Symptom Logger</h3>
-              <span class="card-subtitle">Real-time update to your care team</span>
+              <div class="title-with-subtitle">
+                <h3 class="card-title">Symptom Logger</h3>
+                <span class="card-subtitle">Real-time update to your care team</span>
+              </div>
             </div>
-            <form id="symptom-form" onsubmit="logSymptom(event)">
-              <div class="form-group">
-                <label for="symptom-fatigue">Fatigue Level</label>
-                <select id="symptom-fatigue" class="form-control">
+            <form id="symptom-form" onsubmit="logSymptom(event)" style="margin-bottom: 20px;">
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label for="symptom-fatigue" style="margin-bottom: 4px; font-size: 12px;">Fatigue Level</label>
+                <select id="symptom-fatigue" class="form-control" style="padding: 8px 12px; font-size: 13px;">
                   <option value="None">None - Feeling energetic</option>
                   <option value="Mild" selected>Mild - Normal day-to-day fatigue</option>
                   <option value="Moderate">Moderate - Tired, resting needed</option>
                   <option value="Severe">Severe - Constantly exhausted</option>
                 </select>
               </div>
-              <div class="form-group">
-                <label for="symptom-nausea">Nausea or Abdominal Pain</label>
-                <select id="symptom-nausea" class="form-control">
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label for="symptom-nausea" style="margin-bottom: 4px; font-size: 12px;">Nausea or Abdominal Pain</label>
+                <select id="symptom-nausea" class="form-control" style="padding: 8px 12px; font-size: 13px;">
                   <option value="None" selected>None</option>
                   <option value="Mild">Mild bloating</option>
                   <option value="Moderate">Moderate discomfort</option>
                   <option value="Severe">Severe pain (Alerts Doctor)</option>
                 </select>
               </div>
-              <div class="form-group">
-                <label for="symptom-jaundice">Jaundice Signs (Yellow skin/eyes)</label>
-                <select id="symptom-jaundice" class="form-control">
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label for="symptom-jaundice" style="margin-bottom: 4px; font-size: 12px;">Jaundice Signs (Yellow eyes)</label>
+                <select id="symptom-jaundice" class="form-control" style="padding: 8px 12px; font-size: 13px;">
                   <option value="No" selected>No signs detected</option>
                   <option value="Yes">Yes, slight discoloration (Urgent Alert)</option>
                 </select>
               </div>
-              <button type="submit" class="btn btn-primary btn-block">Submit Symptoms</button>
+              <button type="submit" class="btn btn-primary btn-block btn-small">Submit Symptoms</button>
             </form>
+            
+            <div class="action-divider"></div>
+            
+            <h4 class="subheader" style="margin-top: 15px; margin-bottom: 8px; font-size: 11px;">Today's Checklist</h4>
+            <div class="reminders-list" id="patient-reminders-list" style="max-height: 140px; overflow-y: auto;">
+              <!-- Reminders generated dynamically -->
+            </div>
+          </div>
+
+          <!-- MIDDLE ROW 2: LIVE WEEKLY GRAPHICS & TREND ANALYTICS (MongoDB Visuals) -->
+          <div class="dashboard-card card-span-3" style="grid-column: span 3;">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Weekly Vitals Trend Analytics</h3>
+                <span class="card-subtitle">Real-time health trends drawn dynamically from your MongoDB logging history</span>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <span class="legend-item" style="font-size: 11px;"><span class="legend-color" style="background-color: var(--accent-cyan); width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px;"></span> Sleep Hours</span>
+                <span class="legend-item" style="font-size: 11px;"><span class="legend-color" style="background-color: #3b82f6; width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px;"></span> Water (Liters)</span>
+              </div>
+            </div>
+            
+            <div class="analytics-charts-wrapper" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 15px;">
+              <!-- Sleep Trend Line Graph -->
+              <div class="trend-chart-box" style="background: rgba(0,0,0,0.15); border: var(--border-glow); padding: 16px; border-radius: 8px;">
+                <h4 style="font-size: 12px; margin-bottom: 12px; color: var(--accent-cyan); display: flex; align-items: center; gap: 6px;">
+                  <span>🌙</span> Sleep Duration History (Past 5 Days)
+                </h4>
+                <div id="patient-sleep-svg-chart" style="height: 150px; width: 100%;">
+                  <!-- Dynamically rendered SVG Sleep Line Chart -->
+                </div>
+              </div>
+              
+              <!-- Water Intake Bar Chart -->
+              <div class="trend-chart-box" style="background: rgba(0,0,0,0.15); border: var(--border-glow); padding: 16px; border-radius: 8px;">
+                <h4 style="font-size: 12px; margin-bottom: 12px; color: #3b82f6; display: flex; align-items: center; gap: 6px;">
+                  <span>💧</span> Daily Hydration Volume (Past 5 Days)
+                </h4>
+                <div id="patient-water-svg-chart" style="height: 150px; width: 100%;">
+                  <!-- Dynamically rendered SVG Water Bar Chart -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- HISTORICAL LIVERLINK LOGS (Pulled live from MongoDB) -->
+          <div class="dashboard-card card-span-3" style="grid-column: span 3;">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Chronological Health Logs (MongoDB Records)</h3>
+                <span class="card-subtitle">Full clinical logging history of patient John Doe</span>
+              </div>
+              <button class="btn btn-small btn-secondary" onclick="fetchAndRenderHealthLogsTable()">🔄 Refresh DB Timeline</button>
+            </div>
+            
+            <div class="medical-record-table">
+              <table class="clinical-table">
+                <thead>
+                  <tr>
+                    <th>Date / Time</th>
+                    <th>Log Parameter</th>
+                    <th>Recorded Metrics & Values</th>
+                    <th>Alert Status</th>
+                  </tr>
+                </thead>
+                <tbody id="patient-logs-timeline-tbody">
+                  <tr>
+                    <td colspan="4" class="text-muted" style="text-align: center;">Retrieving data from MongoDB database...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -612,6 +877,12 @@
                 <button class="btn btn-secondary btn-block" onclick="requestLabTest()">
                   🔬 Request Diagnostic Lab Panel
                 </button>
+                <div class="action-divider" style="margin: 20px 0; border-top: 1px solid var(--border-color); opacity: 0.15;"></div>
+                <h4 class="form-section-title">Scan Physical Lab Report</h4>
+                <p class="section-desc">Have a printed paper liver report from patient? Digitise and trend it instantly using our AI agent scanner.</p>
+                <a href="/scanner" class="btn btn-primary btn-block" style="text-align: center; text-decoration: none; display: block; box-sizing: border-box;">
+                  📷 Launch Lab Report Scanner
+                </a>
               </div>
             </div>
           </div>
@@ -702,6 +973,12 @@
                   🔬 Submit Diagnostic Results
                 </button>
               </form>
+              <div class="action-divider" style="margin: 20px 0; border-top: 1px solid var(--border-color); opacity: 0.15;"></div>
+              <h4 class="form-section-title">Digitise Printed Report</h4>
+              <p class="section-desc" style="font-size: 0.82rem; color: var(--color-text-muted); margin-bottom: 12px; line-height: 1.5;">Have a physical serum chemistry sheet? Use the AI Lab Scanner to parse and update automatically.</p>
+              <a href="/scanner" class="btn btn-secondary btn-block" style="text-align: center; text-decoration: none; display: block; box-sizing: border-box;">
+                📷 Scan Printed Report
+              </a>
             </div>
           </div>
         </div>
@@ -709,6 +986,56 @@
 
     </div>
   </div>
+
+  <!-- Real-time Agent Conversational Chat Sidebar/Drawer -->
+  <div id="agent-chat-sidebar" class="agent-chat-sidebar">
+    <div class="chat-header">
+      <div class="chat-agent-info">
+        <div class="chat-agent-orb animate-pulse"></div>
+        <div>
+          <h4 id="chat-agent-title">LiverLink Orchestrator</h4>
+          <span class="chat-agent-subtitle">Global Care Coordinator</span>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <!-- Calm Voice Coaching Switch -->
+        <button id="btn-toggle-voice" class="btn-voice-toggle active" onclick="toggleCalmVoice()" title="Toggle Calm Audio Guide">
+          <span id="voice-toggle-icon">🔊</span> Voice On
+        </button>
+        <button class="chat-btn-close" onclick="toggleAgentChat()" aria-label="Close Chat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="chat-messages-container">
+      <!-- Dynamic messages injected here -->
+      <div class="chat-bubble system">
+        <strong>System Connected</strong>
+        <p id="chat-system-welcome">Hello! Ask me any medical care queries or trigger daily compliance logging.</p>
+      </div>
+    </div>
+    <form class="chat-input-area" onsubmit="sendAgentChatMessage(event)">
+      <!-- Voice Input Microphone Button -->
+      <button type="button" id="chat-mic-btn" class="chat-mic-button" onclick="toggleVoiceInput()" title="Talk to Agent" style="background-color: rgba(255, 255, 255, 0.03); border: var(--border-glow); width: 44px; height: 44px; border-radius: var(--border-radius-sm); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: var(--transition-smooth); margin-right: 4px; flex-shrink: 0; outline: none;">🎤</button>
+      <input type="text" id="chat-user-input" class="chat-input-field" placeholder="Ask agent a question..." required>
+      <button type="submit" id="chat-submit-btn" class="chat-submit-button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </form>
+  </div>
+
+  <!-- Floating Chat Toggle Trigger Button -->
+  <button id="floating-chat-trigger" class="floating-chat-trigger" onclick="toggleAgentChat()" style="display: none;">
+    <span class="chat-icon">💬</span>
+    <span class="chat-label">Talk to Lila</span>
+  </button>
 
   <!-- Notification Banner -->
   <div class="notification-toast" id="notification-toast">
