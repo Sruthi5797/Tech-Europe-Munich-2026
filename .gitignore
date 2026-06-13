@@ -1,11 +1,42 @@
-# Local environment files containing sensitive credentials
-.env
-*.env
-my_agent/.env
+# ──────────────────────────────────────────────
+#  LiverLink — .gitignore
+# ──────────────────────────────────────────────
 
-# macOS system files
-.DS_Store
+# Environment variables (contains secrets & API keys — never commit)
+.env
+.env.*
+!.env.example
 
 # Python virtual environment
 .venv/
 venv/
+env/
+
+# Python bytecode — all subdirectories
+**/__pycache__/
+**/*.py[cod]
+**/*.pyo
+**/*.pyd
+.Python
+
+# Pytest / coverage
+.pytest_cache/
+**/.pytest_cache/
+.coverage
+htmlcov/
+
+# ADK local session storage (machine-specific, changes every run)
+**/.adk/
+**/.sessions/
+**/.artifacts/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+**/*.log
