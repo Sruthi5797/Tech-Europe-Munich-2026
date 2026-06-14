@@ -20,6 +20,8 @@ from caregiver_agent.tools import (
     send_escalation_to_care_team,
     get_cld_care_tip,
     acknowledge_patient_alert,
+    check_hand_ai_and_request_emergency_authorization,
+    get_emergency_authorization_reply,
     check_caregiver_location,
     dispatch_ambulance_via_hitl,
 )
@@ -97,6 +99,8 @@ root_agent = Agent(
         send_escalation_to_care_team,
         get_cld_care_tip,
         acknowledge_patient_alert,
+        check_hand_ai_and_request_emergency_authorization,
+        get_emergency_authorization_reply,
         check_caregiver_location,
         dispatch_ambulance_via_hitl,
     ],
