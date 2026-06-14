@@ -2373,4 +2373,38 @@ h1, h2, h3, h4, h5, .logo-text {
   100% { transform: scale(1.05); }
 }
 
+/* ──────────────────────────────────────────────────────────────────────────────
+   Custom Styles for Chat Redirect & Action Buttons
+   ────────────────────────────────────────────────────────────────────────────── */
+.chat-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--accent-teal, #14b8a6), var(--accent-emerald, #10b981));
+  color: #fff !important;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none !important;
+  cursor: pointer;
+  margin: 6px 0;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  transition: all 0.2s ease;
+  width: fit-content;
+}
+
+.chat-action-btn:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+  filter: brightness(1.15);
+}
+
+.chat-action-btn:active {
+  transform: translateY(0);
+}
+
 

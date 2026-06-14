@@ -339,28 +339,106 @@ def get_patient_comprehensive_profile(patient_query: str) -> dict:
     if not q_tokens:
         q_tokens = [q] if q else []
 
-    # 2. Check for matching lab record in data/test_data/
-    test_data_dir = Path(__file__).parent.parent.parent.parent / "data" / "test_data"
+    is_john = "john" in q or "doe" in q or "patient_john_doe" in q
     matched_lab = None
 
-    if test_data_dir.exists():
-        for item in test_data_dir.iterdir():
-            if item.is_dir():
-                # Check JSON contents
-                for file in item.glob("*_parsed*.json"):
-                    try:
-                        data = json.loads(file.read_text(encoding="utf-8"))
-                        name = data.get("name", "") or ""
-                        pid = data.get("patient_id", "") or ""
-                        search_haystack = f"{item.name} {name} {pid}".lower()
-                        # Verify if all query tokens are in the haystack
-                        if q_tokens and all(token in search_haystack for token in q_tokens):
-                            matched_lab = data
-                            break
-                    except Exception:
-                        pass
-                if matched_lab:
-                    break
+    # 2. Check MongoDB lab_reports collection first
+    try:
+        db = get_db()
+        p_id = "patient_john_doe" if is_john else patient_query
+        # A. Try exact patient_id match
+        db_lab = db.lab_reports.find_one({"patient_id": p_id})
+        
+        # B. Try name match if query has tokens
+        if not db_lab and q_tokens:
+            regex_queries = [{"report_metadata.patient_name": {"$regex": tok, "$options": "i"}} for tok in q_tokens]
+            db_lab = db.lab_reports.find_one({"$and": regex_queries}) if regex_queries else None
+            
+        # C. Fallback for John Doe
+        if not db_lab and is_john:
+            db_lab = db.lab_reports.find_one({"patient_id": "patient_john_doe"})
+
+        if db_lab:
+            meta = db_lab.get("report_metadata", {})
+            biomarkers_dict = {}
+            results = db_lab.get("test_results", [])
+            for r in results:
+                name = r.get("name", "")
+                norm_name = name.upper()
+                val = r.get("value")
+                unit = r.get("unit")
+                ref_range = r.get("reference_range")
+                
+                key = None
+                if "ALT" in norm_name or "ALANINE" in norm_name:
+                    key = "ALT"
+                elif "AST" in norm_name or "ASPARTATE" in norm_name:
+                    key = "AST"
+                elif "ALP" in norm_name or "ALKALINE" in norm_name:
+                    key = "ALP"
+                elif "BILIRUBIN" in norm_name:
+                    if "DIRECT" in norm_name:
+                        key = "direct_bilirubin"
+                    else:
+                        key = "total_bilirubin"
+                elif "ALBUMIN" in norm_name:
+                    key = "albumin"
+                elif "PROTEIN" in norm_name:
+                    key = "total_proteins"
+                elif "GGT" in norm_name:
+                    key = "GGT"
+                elif "PT" in norm_name or "PROTHROMBIN" in norm_name:
+                    key = "PT"
+                elif "INR" in norm_name:
+                    key = "INR"
+                elif "CREATININE" in norm_name:
+                    key = "creatinine"
+                elif "SODIUM" in norm_name:
+                    key = "sodium"
+                    
+                if key:
+                    biomarkers_dict[key] = {
+                        "value": val,
+                        "unit": unit,
+                        "reference_range": ref_range
+                    }
+                    
+            matched_lab = {
+                "patient_id": db_lab.get("patient_id"),
+                "name": meta.get("patient_name") or db_lab.get("patient_id"),
+                "dob": meta.get("date_of_birth"),
+                "age": meta.get("age"),
+                "gender": meta.get("sex"),
+                "report_date": meta.get("report_date"),
+                "lab_name": meta.get("lab_name"),
+                "referring_physician": meta.get("referring_physician"),
+                "biomarkers": biomarkers_dict
+            }
+            print(f"[DOCTOR AGENT] Successfully loaded patient profile from MongoDB: {matched_lab.get('name')}")
+    except Exception as e:
+        print(f"[DB LAB RETRIEVAL ERROR] {e}")
+
+    # Fallback to local parsed JSON files if MongoDB is not available or records were not found
+    if not matched_lab:
+        test_data_dir = Path(__file__).parent.parent.parent.parent / "data" / "test_data"
+        if test_data_dir.exists():
+            for item in test_data_dir.iterdir():
+                if item.is_dir():
+                    # Check JSON contents
+                    for file in item.glob("*_parsed*.json"):
+                        try:
+                            data = json.loads(file.read_text(encoding="utf-8"))
+                            name = data.get("name", "") or ""
+                            pid = data.get("patient_id", "") or ""
+                            search_haystack = f"{item.name} {name} {pid}".lower()
+                            # Verify if all query tokens are in the haystack
+                            if q_tokens and all(token in search_haystack for token in q_tokens):
+                                matched_lab = data
+                                break
+                        except Exception:
+                            pass
+                    if matched_lab:
+                        break
 
     # 3. Retrieve database telemetry (MongoDB health_logs) if available
     db_logs = []
@@ -420,10 +498,15 @@ def get_patient_comprehensive_profile(patient_query: str) -> dict:
     pt = get_biomarker_value("PT")
 
     # MELD parameters (bilirubin, creatinine, INR, sodium)
-    # Since creatinine and sodium are not in our standard LFT, use defaults and highlight
-    creat_val = 1.0
-    sodium_val = 137.0
-    assumed_params = ["creatinine (1.0 mg/dL)", "sodium (137 mEq/L)"]
+    # Check if creatinine and sodium are dynamically provided, otherwise fallback
+    creat_val = get_biomarker_value("creatinine") or 1.0
+    sodium_val = get_biomarker_value("sodium") or 137.0
+    
+    assumed_params = []
+    if get_biomarker_value("creatinine") is None:
+        assumed_params.append("creatinine (1.0 mg/dL)")
+    if get_biomarker_value("sodium") is None:
+        assumed_params.append("sodium (137 mEq/L)")
 
     # 5. Automated MELD-Na Calculation
     meld_result = None
@@ -718,6 +801,269 @@ def notify_doctor_and_prep_emergency_admission(patient_id: str = "patient_john_d
         "admission_status": "PREPPED",
         "triage_category": "Urgent Decompensation",
         "details": admission_record
+    }
+
+
+def update_patient_prescription(patient_id: str, medication: str, frequency: str) -> dict:
+    """Updates a patient's active medication and frequency schedule in MongoDB.
+    Use this tool whenever a doctor wants to prescribe, change, or update a patient's medication regimen.
+
+    Args:
+        patient_id (str): The patient identifier or name (e.g. 'patient_john_doe', 'Sarah Connor', 'John Doe').
+        medication (str): The name and strength of the medication (e.g. 'Ursodiol 300mg', 'Obeticholic Acid 5mg').
+        frequency (str): The dosing frequency instructions (e.g. 'Once daily in the morning', '2 times daily').
+
+    Returns:
+        dict: Confirmation status of the updated prescription.
+    """
+    from datetime import datetime, timezone
+    from shared.db import get_db
+
+    try:
+        db = get_db()
+        p_id = "patient_john_doe" if "john" in patient_id.lower() or "doe" in patient_id.lower() else "patient_sarah_connor"
+        db.prescriptions.update_one(
+            {"patient_id": p_id},
+            {"$set": {
+                "medication": medication,
+                "frequency": frequency,
+                "timestamp": datetime.now(timezone.utc)
+            }},
+            upsert=True
+        )
+        
+        # Log to health logs as an event
+        db.health_logs.insert_one({
+            "patient_id": p_id,
+            "event": "prescription_change",
+            "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            "timestamp": datetime.now(timezone.utc),
+            "data": {
+                "medication": medication,
+                "frequency": frequency,
+                "changed_by": "Dr. Elizabeth Vance"
+            }
+        })
+        
+        return {
+            "status": "success",
+            "message": f"Successfully updated prescription for {p_id} to {medication} ({frequency}).",
+            "patient_id": p_id,
+            "medication": medication,
+            "frequency": frequency
+        }
+    except Exception as e:
+        return {"status": "error", "error_message": f"Failed to update prescription: {str(e)}"}
+
+
+def order_lab_test_and_alert_lab(patient_id: str, test_panel_type: str) -> dict:
+    """Orders a diagnostic blood work lab panel and sends an alert order directly to the Central Lab Portal.
+    Use this tool whenever a doctor orders, schedules, or requests a diagnostic blood test/lab panel.
+
+    Args:
+        patient_id (str): The patient identifier or name (e.g. 'patient_john_doe', 'Sarah Connor', 'John Doe').
+        test_panel_type (str): The type of lab panel (e.g. 'Comprehensive Liver Function Panel', 'Basic ALT/AST Screen').
+
+    Returns:
+        dict: Confirmation details of the dispatched lab order.
+    """
+    from datetime import datetime, timezone
+    from shared.db import get_db
+    import random
+
+    try:
+        db = get_db()
+        p_id = "patient_john_doe" if "john" in patient_id.lower() or "doe" in patient_id.lower() else "patient_sarah_connor"
+        p_name = "John Doe" if p_id == "patient_john_doe" else "Sarah Connor"
+        order_id = f"ORD-{random.randint(1000, 9999)}"
+        
+        # Save order details to health logs to inform lab
+        db.health_logs.insert_one({
+            "patient_id": p_id,
+            "event": "lab_ordered",
+            "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            "timestamp": datetime.now(timezone.utc),
+            "data": {
+                "order_id": order_id,
+                "patient_name": p_name,
+                "requested_panel": test_panel_type,
+                "status": "Pending",
+                "ordered_by": "Dr. Elizabeth Vance"
+            }
+        })
+        
+        # Also create caregiver alert that lab is ordered
+        db.caregiver_alerts.insert_one({
+            "patient_id": p_id,
+            "severity": "info",
+            "message": f"INFO: Dr. Elizabeth Vance ordered a new {test_panel_type} (Order {order_id}) for {p_name}.",
+            "acknowledged": False,
+            "timestamp": datetime.now(timezone.utc)
+        })
+
+        return {
+            "status": "success",
+            "message": f"Dispatched {test_panel_type} lab order directly to Central Lab Portal for patient {p_name}.",
+            "order_id": order_id,
+            "patient_id": p_id,
+            "patient_name": p_name,
+            "requested_panel": test_panel_type
+        }
+    except Exception as e:
+        return {"status": "error", "error_message": f"Failed to order lab panel: {str(e)}"}
+
+
+def order_imaging_scan(patient_id: str, scan_type: str = "Abdominal CT Scan (Contrast-Enhanced)") -> dict:
+    """Orders a specialized imaging scan (such as a Contrast-Enhanced CT Scan or Abdominal Ultrasound)
+    and transmits the scan request directly to the Clinical Lab and Diagnostics Portal.
+    Use this tool whenever a physician wants to recommend, order, or request a specialized scan (like a CT scan or ultrasound).
+
+    Args:
+        patient_id (str): The patient identifier or name (e.g. 'patient_john_doe', 'Sarah Connor', 'John Doe').
+        scan_type (str): The type of imaging scan to order (e.g. 'Abdominal CT Scan (Contrast-Enhanced)', 'Abdominal Ultrasound').
+
+    Returns:
+        dict: Confirmation details of the ordered imaging scan.
+    """
+    from datetime import datetime, timezone
+    from shared.db import get_db
+    import random
+
+    try:
+        db = get_db()
+        p_id = "patient_john_doe" if "john" in patient_id.lower() or "doe" in patient_id.lower() else "patient_sarah_connor"
+        p_name = "John Doe" if p_id == "patient_john_doe" else "Sarah Connor"
+        order_id = f"ORD-{random.randint(1000, 9999)}"
+        
+        # Save order details to health logs to inform lab
+        db.health_logs.insert_one({
+            "patient_id": p_id,
+            "event": "lab_ordered",
+            "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            "timestamp": datetime.now(timezone.utc),
+            "data": {
+                "order_id": order_id,
+                "patient_name": p_name,
+                "requested_panel": scan_type,
+                "status": "Pending",
+                "ordered_by": "Dr. Elizabeth Vance"
+            }
+        })
+        
+        # Also create caregiver alert that scan is ordered
+        db.caregiver_alerts.insert_one({
+            "patient_id": p_id,
+            "severity": "info",
+            "message": f"INFO: Dr. Elizabeth Vance ordered a specialized {scan_type} (Order {order_id}) for {p_name}.",
+            "acknowledged": False,
+            "timestamp": datetime.now(timezone.utc)
+        })
+
+        return {
+            "status": "success",
+            "message": f"Dispatched specialized {scan_type} order directly to Central Lab Portal for patient {p_name}.",
+            "order_id": order_id,
+            "patient_id": p_id,
+            "patient_name": p_name,
+            "requested_panel": scan_type
+        }
+    except Exception as e:
+        return {"status": "error", "error_message": f"Failed to order imaging scan: {str(e)}"}
+
+
+def get_clinical_feed_knowing_patient_details(patient_id: str) -> dict:
+    """Retrieves up-to-date medical research, clinical trials, or guidelines from the live web (Tavily)
+    specifically tailored to the patient's current clinical profile, diagnosis, and staging details.
+    Use this tool whenever a doctor asks for a clinical feed, recent developments, or latest literature
+    knowing or based on a specific patient's details.
+
+    Args:
+        patient_id (str): The patient ID or name (e.g. 'John Doe', 'Sarah Connor', 'patient_john_doe').
+
+    Returns:
+        dict: A clinical feed summary and list of articles relevant to the patient's specific liver condition.
+    """
+    from datetime import datetime, timezone
+    from shared.db import get_db
+    import os
+    import json
+    from tavily import TavilyClient
+
+    # 1. Get patient's profile details to know their condition
+    profile = get_patient_comprehensive_profile(patient_id)
+    if profile.get("status") == "error":
+        return profile
+
+    meta = profile.get("patient_metadata", {})
+    name = meta.get("name", "Patient")
+    
+    # Extract condition or diagnosis
+    diagnosis = "liver cirrhosis" if "cirrhosis" in str(profile).lower() else "MASH liver disease"
+    if "connor" in name.lower() or "sarah" in name.lower():
+        diagnosis = "NAFLD Stage 3 liver fibrosis guidelines AASLD"
+    elif "john" in name.lower() or "doe" in name.lower():
+        diagnosis = "MASH stage 2 liver fibrosis therapeutic guidelines AASLD"
+
+    tavily_key = os.getenv("TAVILY_API_KEY")
+    if not tavily_key:
+        return {
+            "status": "error",
+            "error_message": "TAVILY_API_KEY is not configured in the environment."
+        }
+
+    # 2. Search Tavily for recent clinical developments tailored to this patient's condition
+    try:
+        tavily_client = TavilyClient(api_key=tavily_key)
+        query = f"recent 2025 2026 developments clinical trials therapy guidelines for {diagnosis}"
+        resp = tavily_client.search(query=query, max_results=4)
+        results = resp.get("results", [])
+    except Exception as e:
+        return {
+            "status": "error",
+            "error_message": f"Failed to execute Tavily search: {str(e)}"
+        }
+
+    articles = []
+    for r in results:
+        articles.append({
+            "title": r.get("title", "Clinical Publication"),
+            "snippet": r.get("snippet", ""),
+            "url": r.get("url", "#")
+        })
+
+    # Try to synthesize a brief tailored clinical feed via Gemini if possible
+    summary = ""
+    google_key = os.getenv("GOOGLE_API_KEY")
+    if google_key and articles:
+        try:
+            import google.genai as genai
+            from google.genai import types
+            genai_client = genai.Client(api_key=google_key)
+            prompt = f"""
+            You are a specialized clinical research summarizer for Hepatology.
+            You are synthesizing a tailored clinical feed for Dr. Elizabeth Vance regarding patient {name} (Diagnosis: {diagnosis}).
+            Below are the raw search results fetched from Tavily regarding recent clinical updates for {diagnosis}:
+            
+            {json.dumps(articles, indent=2)}
+            
+            Please provide a professional, highly concise clinical feed summary (3-4 sentences maximum) that tells the doctor how these recent developments, trials, or guidelines relate to managing a patient like {name}. Speak in expert medical terminology. Do not include greetings or signatures.
+            """
+            gemini_resp = genai_client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=[types.Part.from_text(text=prompt)]
+            )
+            summary = gemini_resp.text.strip()
+        except Exception as e:
+            summary = f"Abbreviated search results returned for {name}'s condition ({diagnosis}). Review direct sources below."
+    else:
+        summary = f"Live clinical feed loaded successfully for {name}'s condition ({diagnosis}). Review the articles below."
+
+    return {
+        "status": "success",
+        "patient_name": name,
+        "tailored_condition": diagnosis,
+        "summary": summary,
+        "articles": articles
     }
 
 

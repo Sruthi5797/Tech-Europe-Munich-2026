@@ -782,7 +782,7 @@
                 <div class="pat-initials font-gradient">SC</div>
                 <div class="pat-info">
                   <strong>Sarah Connor</strong>
-                  <span>Early Liver Cirrhosis</span>
+                  <span>NAFLD Stage 3</span>
                 </div>
               </div>
             </div>
@@ -804,6 +804,38 @@
                   <span class="legend-item"><span class="legend-color alt-color"></span> ALT (Alanine Aminotransferase)</span>
                   <span class="legend-item"><span class="legend-color ast-color"></span> AST (Aspartate Aminotransferase)</span>
                 </div>
+              </div>
+
+              <!-- AI Clinical Risk Indicators (MELD-Na / Child-Pugh) -->
+              <div class="doctor-hud-metrics" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 24px 0;">
+                
+                <!-- MELD-Na Card -->
+                <div class="hud-card" id="doctor-meld-card" style="background: rgba(20, 184, 166, 0.05); border: 1px solid rgba(20, 184, 166, 0.2); border-radius: var(--border-radius-md); padding: 16px; text-align: center; position: relative; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                  <div style="font-size: 11px; font-weight: 700; color: var(--accent-teal); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">MELD-Na Score</div>
+                  <div id="doctor-meld-score" style="font-size: 32px; font-weight: 800; color: #fff; line-height: 1.2;">12</div>
+                  <div id="doctor-meld-interpretation" style="font-size: 10px; color: var(--color-text-secondary); margin-top: 4px;">6.0% 3-month mortality</div>
+                  <div id="doctor-meld-badge" style="position: absolute; top: 8px; right: 8px; font-size: 8px; font-weight: 800; background: rgba(16, 185, 129, 0.2); color: var(--accent-emerald); padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">ROUTINE</div>
+                </div>
+
+                <!-- Child-Pugh Card -->
+                <div class="hud-card" id="doctor-cp-card" style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: var(--border-radius-md); padding: 16px; text-align: center; position: relative; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                  <div style="font-size: 11px; font-weight: 700; color: var(--accent-emerald); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Child-Pugh Classification</div>
+                  <div id="doctor-cp-score" style="font-size: 32px; font-weight: 800; color: #fff; line-height: 1.2;">Class A</div>
+                  <div id="doctor-cp-points" style="font-size: 10px; color: var(--color-text-secondary); margin-top: 4px;">5 points (100% 1-yr survival)</div>
+                  <div id="doctor-cp-badge" style="position: absolute; top: 8px; right: 8px; font-size: 8px; font-weight: 800; background: rgba(16, 185, 129, 0.2); color: var(--accent-emerald); padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">COMPENSATED</div>
+                </div>
+
+                <!-- Clinical Recommendation Card -->
+                <div class="hud-card" id="doctor-rec-card" style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: var(--border-radius-md); padding: 16px; text-align: center; position: relative; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                  <div style="font-size: 11px; font-weight: 700; color: #60a5fa; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">AI Recommendation</div>
+                  <div id="doctor-rec-title" style="font-size: 13px; font-weight: 700; color: #fff; line-height: 1.4; margin: 4px 0 2px 0;">Routine LFT Surveillance</div>
+                  <div id="doctor-rec-desc" style="font-size: 10px; color: var(--color-text-secondary); line-height: 1.3;">Repeat liver enzyme panel in 3 months.</div>
+                  <div id="doctor-telemetry-status" style="position: absolute; top: 8px; right: 8px; display: flex; align-items: center; gap: 4px;">
+                    <span id="doctor-telemetry-dot" class="status-dot green" style="width: 6px; height: 6px;"></span>
+                    <span id="doctor-telemetry-text" style="font-size: 8px; font-weight: 800; color: var(--accent-emerald); text-transform: uppercase;">NORMAL</span>
+                  </div>
+                </div>
+
               </div>
 
               <!-- Lab records table -->
@@ -829,62 +861,93 @@
           </div>
 
           <!-- Right Sidebar: Clinical Prescriptions & Diagnostics -->
-          <div class="dashboard-card">
-            <div class="card-header">
-              <h3 class="card-title">Order Treatments & Diagnostics</h3>
-            </div>
+          <div style="display: flex; flex-direction: column; gap: 24px;">
             
-            <div class="doctor-actions">
-              <!-- Medication prescription form -->
-              <div class="prescription-form-section">
-                <h4 class="form-section-title">Modify Prescription</h4>
-                <div class="form-group">
-                  <label for="doctor-prescribe-med">Medication Name</label>
-                  <select id="doctor-prescribe-med" class="form-control">
-                    <option value="Ursodiol 300mg">Ursodiol 300mg</option>
-                    <option value="Obeticholic Acid 5mg">Obeticholic Acid 5mg</option>
-                    <option value="Lactulose Oral Solution">Lactulose Oral Solution</option>
-                    <option value="Tenofovir 300mg">Tenofovir 300mg</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label for="doctor-prescribe-freq">Frequency Instruction</label>
-                  <select id="doctor-prescribe-freq" class="form-control">
-                    <option value="Once daily in the morning">Once daily in the morning</option>
-                    <option value="2 times daily (with breakfast & dinner)">2 times daily (with breakfast & dinner)</option>
-                    <option value="3 times daily (with meals)">3 times daily (with meals)</option>
-                  </select>
-                </div>
-                <button class="btn btn-primary btn-block" onclick="applyPrescriptionChange()">
-                  💾 Update Prescription
-                </button>
+            <div class="dashboard-card">
+              <div class="card-header">
+                <h3 class="card-title">Order Treatments & Diagnostics</h3>
               </div>
-
-              <div class="action-divider"></div>
-
-              <!-- Request new lab test -->
-              <div class="request-lab-section">
-                <h4 class="form-section-title">Request Diagnostic Test</h4>
-                <p class="section-desc">Instantly dispatch a blood work order to the Clinical Lab Portal.</p>
-                <div class="form-group">
-                  <label for="doctor-lab-panel">Lab Panel Type</label>
-                  <select id="doctor-lab-panel" class="form-control">
-                    <option value="Comprehensive Liver Function Panel">Comprehensive Liver Function Panel</option>
-                    <option value="Basic ALT/AST Screen">Basic ALT/AST Screen</option>
-                    <option value="Hepatic Panel with Bilirubin">Hepatic Panel with Bilirubin</option>
-                  </select>
+              
+              <div class="doctor-actions">
+                <!-- Medication prescription form -->
+                <div class="prescription-form-section">
+                  <h4 class="form-section-title">Modify Prescription</h4>
+                  <div class="form-group">
+                    <label for="doctor-prescribe-med">Medication Name</label>
+                    <select id="doctor-prescribe-med" class="form-control">
+                      <option value="Ursodiol 300mg">Ursodiol 300mg</option>
+                      <option value="Obeticholic Acid 5mg">Obeticholic Acid 5mg</option>
+                      <option value="Lactulose Oral Solution">Lactulose Oral Solution</option>
+                      <option value="Tenofovir 300mg">Tenofovir 300mg</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="doctor-prescribe-freq">Frequency Instruction</label>
+                    <select id="doctor-prescribe-freq" class="form-control">
+                      <option value="Once daily in the morning">Once daily in the morning</option>
+                      <option value="2 times daily (with breakfast & dinner)">2 times daily (with breakfast & dinner)</option>
+                      <option value="3 times daily (with meals)">3 times daily (with meals)</option>
+                    </select>
+                  </div>
+                  <button class="btn btn-primary btn-block" onclick="applyPrescriptionChange()">
+                    💾 Update Prescription
+                  </button>
                 </div>
-                <button class="btn btn-secondary btn-block" onclick="requestLabTest()">
-                  🔬 Request Diagnostic Lab Panel
-                </button>
-                <div class="action-divider" style="margin: 20px 0; border-top: 1px solid var(--border-color); opacity: 0.15;"></div>
-                <h4 class="form-section-title">Scan Physical Lab Report</h4>
-                <p class="section-desc">Have a printed paper liver report from patient? Digitise and trend it instantly using our AI agent scanner.</p>
-                <a href="/scanner" class="btn btn-primary btn-block" style="text-align: center; text-decoration: none; display: block; box-sizing: border-box;">
-                  📷 Launch Lab Report Scanner
-                </a>
+
+                <div class="action-divider"></div>
+
+                <!-- Request new lab test -->
+                <div class="request-lab-section">
+                  <h4 class="form-section-title">Request Diagnostic Test</h4>
+                  <p class="section-desc">Instantly dispatch a blood work order to the Clinical Lab Portal.</p>
+                  <div class="form-group">
+                    <label for="doctor-lab-panel">Lab Panel Type</label>
+                    <select id="doctor-lab-panel" class="form-control">
+                      <option value="Comprehensive Liver Function Panel">Comprehensive Liver Function Panel</option>
+                      <option value="Basic ALT/AST Screen">Basic ALT/AST Screen</option>
+                      <option value="Hepatic Panel with Bilirubin">Hepatic Panel with Bilirubin</option>
+                    </select>
+                  </div>
+                  <button class="btn btn-secondary btn-block" onclick="requestLabTest()">
+                    🔬 Request Diagnostic Lab Panel
+                  </button>
+                  <div class="action-divider" style="margin: 20px 0; border-top: 1px solid var(--border-color); opacity: 0.15;"></div>
+                  <h4 class="form-section-title">Scan Physical Lab Report</h4>
+                  <p class="section-desc">Have a printed paper liver report from patient? Digitise and trend it instantly using our AI agent scanner.</p>
+                  <a href="/scanner" class="btn btn-primary btn-block" style="text-align: center; text-decoration: none; display: block; box-sizing: border-box;">
+                    📷 Launch Lab Report Scanner
+                  </a>
+                </div>
               </div>
             </div>
+
+            <!-- Morning Hepatology Briefing Card -->
+            <div class="dashboard-card">
+              <div class="card-header">
+                <h3 class="card-title" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                  <span>📰 Tavily Clinical Feed</span>
+                  <button id="btn-morning-briefing" class="btn btn-small btn-secondary" onclick="fetchMorningBriefing()" style="padding: 4px 10px; font-size: 11px; cursor: pointer; outline: none; border-radius: 4px;">🔄 Summary</button>
+                </h3>
+              </div>
+              <div class="morning-research-section">
+                <p class="section-desc" style="font-size: 12px; line-height: 1.4; color: var(--color-text-secondary); margin-bottom: 12px;">Review active liver trial findings, therapeutic updates, and regional AASLD clinical guidelines fetched via Tavily.</p>
+                
+                <div id="morning-briefing-loading" class="text-muted" style="font-size: 11px; padding: 10px 0; display: none; align-items: center; gap: 8px;">
+                  <span class="status-dot green" style="width: 8px; height: 8px; animation: statusPulse 1.5s infinite;"></span>
+                  <span>Invoking Tavily research pipeline...</span>
+                </div>
+                
+                <div id="morning-briefing-content" style="background: rgba(0, 0, 0, 0.25); border: var(--border-glow); border-radius: var(--border-radius-sm); padding: 14px; margin-top: 10px;">
+                  <p id="morning-briefing-summary" style="font-size: 12px; line-height: 1.5; color: var(--color-text-primary); margin-bottom: 12px; font-style: italic;">
+                    No feed pre-fetched. Tap "Summary" to query the Live Tavily Web Search and generate a synthesized Hepatologist briefing.
+                  </p>
+                  <div id="morning-briefing-links" style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px; max-height: 180px; overflow-y: auto;">
+                    <!-- Live Article Links -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>

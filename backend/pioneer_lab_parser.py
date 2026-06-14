@@ -181,30 +181,43 @@ def call_pioneer_gliner2(text: str, pioneer_api_key: str) -> dict:
 
 def gliner2_result_to_lft(raw: dict, patient_id: str) -> dict:
     """Normalise Pioneer GLiNER2 structures response into our LFT JSON shape."""
-    # Pioneer returns: {"result": {"structures": {"lab_report": [{field: value, ...}]}}}
-    structures = raw.get("result", {}).get("structures", {})
+    # Pioneer returns: {"result": {"data" or "structures": {"lab_report": [{field: {"text": value}, ...}]}}}
+    result_obj = raw.get("result", {})
+    structures = result_obj.get("data", {})
+    if not structures:
+        structures = result_obj.get("structures", {})
     instances  = structures.get("lab_report", [{}])
     fields     = instances[0] if instances else {}
 
+    def get_val(field_obj):
+        if isinstance(field_obj, dict):
+            return field_obj.get("text")
+        return field_obj
+
     def num(val):
-        if val is None:
+        val_text = get_val(val)
+        if val_text is None:
             return None
-        # Strip units — keep the first numeric token
-        token = str(val).split()[0].replace(",", "")
-        try:
-            return float(token)
-        except ValueError:
-            return None
+        import re
+        tokens = re.findall(r"[-+]?\d*\.?\d+", str(val_text).replace(",", ""))
+        for token in tokens:
+            if token in ("", ".", "-", "+", "-.", "+."):
+                continue
+            try:
+                return float(token)
+            except ValueError:
+                continue
+        return None
 
     return {
         "patient_id":          patient_id,
-        "name":                fields.get("patient_name"),
-        "dob":                 fields.get("date_of_birth"),
+        "name":                get_val(fields.get("patient_name")),
+        "dob":                 get_val(fields.get("date_of_birth")),
         "age":                 num(fields.get("age")),
-        "gender":              fields.get("gender"),
-        "report_date":         fields.get("report_date"),
-        "referring_physician": fields.get("referring_physician"),
-        "lab_name":            fields.get("lab_name"),
+        "gender":              get_val(fields.get("gender")),
+        "report_date":         get_val(fields.get("report_date")),
+        "referring_physician": get_val(fields.get("referring_physician")),
+        "lab_name":            get_val(fields.get("lab_name")),
         "biomarkers": {
             "ALT":             num(fields.get("ALT")),
             "AST":             num(fields.get("AST")),
@@ -218,11 +231,11 @@ def gliner2_result_to_lft(raw: dict, patient_id: str) -> dict:
             "INR":             num(fields.get("INR")),
         },
         "reference_ranges": {
-            "ALT":             fields.get("ALT_ref_range"),
-            "AST":             fields.get("AST_ref_range"),
-            "ALP":             fields.get("ALP_ref_range"),
-            "total_bilirubin": fields.get("total_bilirubin_ref"),
-            "albumin":         fields.get("albumin_ref"),
+            "ALT":             get_val(fields.get("ALT_ref_range")),
+            "AST":             get_val(fields.get("AST_ref_range")),
+            "ALP":             get_val(fields.get("ALP_ref_range")),
+            "total_bilirubin": get_val(fields.get("total_bilirubin_ref")),
+            "albumin":         get_val(fields.get("albumin_ref")),
         },
         "_raw_gliner2": raw,   # keep full Pioneer response for debugging
     }

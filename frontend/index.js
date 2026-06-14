@@ -31,7 +31,7 @@ const patientsData = {
   },
   "Sarah Connor": {
     name: "Sarah Connor",
-    diagnosis: "Early Liver Cirrhosis",
+    diagnosis: "NAFLD Stage 3",
     medication: "Obeticholic Acid 5mg",
     frequency: "Once daily in the morning",
     timelineDays: 20,
@@ -85,6 +85,8 @@ function scrollToStats() {
 
 async function syncWithBackend() {
   const patient = patientsData[state.currentPatient];
+  const query_id = state.currentPatient === "John Doe" ? "patient_john_doe" : "patient_sarah_connor";
+  
   try {
     // 1. Fetch prescription
     const prescRes = await fetch(`/api/patient/prescription?patient_id=${state.currentPatient}`);
@@ -180,6 +182,19 @@ async function syncWithBackend() {
     }
   } catch (err) {
     console.log("Not running in backend server environment, using local mock health logs", err);
+  }
+
+  try {
+    // 5. Fetch diagnostic lab orders from backend MongoDB
+    const orderRes = await fetch("/api/doctor/lab-orders");
+    if (orderRes.ok) {
+      const orders = await orderRes.json();
+      if (orders && orders.length > 0) {
+        state.labOrders = orders;
+      }
+    }
+  } catch (err) {
+    console.log("Could not fetch diagnostic lab orders from backend");
   }
 }
 
@@ -461,6 +476,157 @@ function renderDoctorDashboard(patient) {
     tbody.appendChild(tr);
   });
 
+  // Calculate and Update HUD Metrics dynamically using latest lab work and telemetry
+  const latestBio = patient.biochemistry[patient.biochemistry.length - 1] || { alt: 40, ast: 35, bilirubin: 1.0 };
+  const alt = latestBio.alt;
+  const ast = latestBio.ast;
+  const bili = latestBio.bilirubin;
+  
+  let alb = latestBio.albumin !== undefined ? latestBio.albumin : 3.8;
+  let inr = latestBio.inr !== undefined ? latestBio.inr : 1.0;
+  let creatinine = latestBio.creatinine !== undefined ? latestBio.creatinine : 1.0;
+  let sodium = latestBio.sodium !== undefined ? latestBio.sodium : 137.0;
+  
+  if (patient.vitals) {
+    if (patient.vitals.albumin !== undefined) alb = patient.vitals.albumin;
+    if (patient.vitals.inr !== undefined) inr = patient.vitals.inr;
+    if (patient.vitals.creatinine !== undefined) creatinine = patient.vitals.creatinine;
+    if (patient.vitals.sodium !== undefined) sodium = patient.vitals.sodium;
+  }
+  
+  const hasJaundice = patient.symptoms?.jaundice === "Yes";
+  const hasHE = patient.symptoms?.fatigue === "Severe" && patient.symptoms?.nausea === "Severe";
+  
+  // MELD-Na Calculation
+  const crVal = Math.min(Math.max(creatinine, 1.0), 4.0);
+  const biliVal = Math.max(bili, 1.0);
+  const inrVal = Math.max(inr, 1.0);
+  const naVal = Math.min(Math.max(sodium, 125.0), 137.0);
+
+  let meldI = 0.957 * Math.log(crVal) + 0.378 * Math.log(biliVal) + 1.120 * Math.log(inrVal) + 0.643;
+  meldI = meldI * 10;
+
+  let meldNa = Math.round(meldI);
+  if (meldI > 11.0) {
+    meldNa = Math.round(meldI + 1.32 * (137.0 - naVal) - (0.025 * meldI * (137.0 - naVal)));
+  }
+  
+  let mort = "1.9% estimated 3-month mortality";
+  if (meldNa <= 9) mort = "1.9% estimated 3-month mortality";
+  else if (meldNa <= 19) mort = "6.0% estimated 3-month mortality";
+  else if (meldNa <= 29) mort = "19.6% estimated 3-month mortality";
+  else if (meldNa <= 39) mort = "52.6% estimated 3-month mortality";
+  else mort = "71.3% estimated 3-month mortality";
+  
+  // Child-Pugh Calculation
+  let cpPoints = 0;
+  if (bili < 2.0) cpPoints += 1;
+  else if (bili <= 3.0) cpPoints += 2;
+  else cpPoints += 3;
+
+  if (alb > 3.5) cpPoints += 1;
+  else if (alb >= 2.8) cpPoints += 2;
+  else cpPoints += 3;
+
+  if (inr < 1.7) cpPoints += 1;
+  else if (inr <= 2.3) cpPoints += 2;
+  else cpPoints += 3;
+
+  if (hasJaundice || (patient.symptoms?.nausea === "Severe")) {
+    cpPoints += 2; // Mild ascites assumed
+  } else {
+    cpPoints += 1;
+  }
+
+  if (hasHE || patient.symptoms?.fatigue === "Severe") {
+    cpPoints += 2; // Grade I-II HE assumed
+  } else {
+    cpPoints += 1;
+  }
+
+  let cpClass = "A";
+  let cpSurvival = "100% 1-yr survival, 85% 2-yr survival";
+  if (cpPoints <= 6) {
+    cpClass = "A";
+    cpSurvival = "100% 1-yr survival, 85% 2-yr survival";
+  } else if (cpPoints <= 9) {
+    cpClass = "B";
+    cpSurvival = "80% 1-yr survival, 60% 2-yr survival";
+  } else {
+    cpClass = "C";
+    cpSurvival = "45% 1-yr survival, 35% 2-yr survival";
+  }
+
+  // Recommendation and Alert Levels
+  let recTitle = "Routine LFT Surveillance";
+  let recDesc = "Repeat liver enzyme panel in 3 months.";
+  let severityLabel = "ROUTINE";
+  let severityColor = "rgba(16, 185, 129, 0.15)";
+  let textAccent = "var(--accent-emerald)";
+  let telemetryDot = "green";
+  let telemetryText = "NORMAL";
+  
+  if (patient.name === "Sarah Connor") {
+    recTitle = "CT Recommended (LI-RADS Surveillance)";
+    recDesc = `NAFLD Stage 3 with advanced fibrosis requires contrast-enhanced CT scan for Hepatocellular Carcinoma (HCC) risk screening.
+               <button id="btn-invoke-ct" class="btn btn-warning btn-block" style="margin-top: 10px; font-size: 11px; padding: 6px; font-weight: bold; cursor: pointer; border-radius: 4px;" onclick="invokeCTScanForSarah()">🚨 Invoke CT Recommendation</button>`;
+    severityLabel = "SURVEILLANCE DUE";
+    severityColor = "rgba(234, 88, 12, 0.2)";
+    textAccent = "#ea580c";
+    telemetryDot = "orange";
+    telemetryText = "ABNORMAL";
+  } else if (meldNa >= 30 || cpClass === "C") {
+    recTitle = "Immediate ICU/Transplant Referral";
+    recDesc = "Urgent liver transplant evaluation and tertiary care transfer.";
+    severityLabel = "CRITICAL";
+    severityColor = "rgba(239, 68, 68, 0.2)";
+    textAccent = "#ef4444";
+    telemetryDot = "red";
+    telemetryText = "EMERGENCY";
+  } else if (meldNa >= 15 || cpClass === "B" || hasJaundice || hasHE) {
+    recTitle = "Urgent Hepatology Consult";
+    recDesc = "Titrate Lactulose oral solution (HE) & schedule 24h draw.";
+    severityLabel = "HIGH RISK";
+    severityColor = "rgba(234, 88, 12, 0.2)";
+    textAccent = "#ea580c";
+    telemetryDot = "orange";
+    telemetryText = "ABNORMAL";
+  } else if (alt > 56 || ast > 40 || bili > 1.2) {
+    recTitle = "Moderate Outpatient Follow-up";
+    recDesc = "Repeat liver panel in 4-6 weeks to observe trend.";
+    severityLabel = "MODERATE RISK";
+    severityColor = "rgba(234, 88, 12, 0.15)";
+    textAccent = "#ea580c";
+    telemetryDot = "orange";
+    telemetryText = "ELEVATED";
+  }
+
+  // Update DOM Elements
+  document.getElementById('doctor-meld-score').textContent = meldNa;
+  document.getElementById('doctor-meld-interpretation').textContent = mort;
+  
+  const meldB = document.getElementById('doctor-meld-badge');
+  meldB.textContent = severityLabel;
+  meldB.style.backgroundColor = severityColor;
+  meldB.style.color = textAccent;
+
+  document.getElementById('doctor-cp-score').textContent = `Class ${cpClass}`;
+  document.getElementById('doctor-cp-points').textContent = `${cpPoints} points (${cpSurvival})`;
+  
+  const cpB = document.getElementById('doctor-cp-badge');
+  cpB.textContent = cpClass === "A" ? "COMPENSATED" : (cpClass === "B" ? "COMPROMISED" : "DECOMPENSATED");
+  cpB.style.backgroundColor = cpClass === "A" ? "rgba(16, 185, 129, 0.2)" : (cpClass === "B" ? "rgba(234, 88, 12, 0.2)" : "rgba(239, 68, 68, 0.2)");
+  cpB.style.color = cpClass === "A" ? "var(--accent-emerald)" : (cpClass === "B" ? "#ea580c" : "#ef4444");
+
+  document.getElementById('doctor-rec-title').textContent = recTitle;
+  document.getElementById('doctor-rec-desc').innerHTML = recDesc;
+  
+  document.getElementById('doctor-telemetry-dot').className = `status-dot ${telemetryDot}`;
+  
+  const tTxt = document.getElementById('doctor-telemetry-text');
+  tTxt.textContent = telemetryText;
+  tTxt.style.color = telemetryDot === "green" ? "var(--accent-emerald)" : (telemetryDot === "orange" ? "#ea580c" : "#ef4444");
+
   // Render SVG Enzyme Trend Chart
   renderBiochemicalChart(patient.biochemistry);
 }
@@ -647,7 +813,7 @@ async function applyPrescriptionChange() {
   renderDoctorDashboard(patient);
 }
 
-function requestLabTest() {
+async function requestLabTest() {
   const panel = document.getElementById('doctor-lab-panel').value;
   const patient = state.currentPatient;
   const orderId = "ORD-" + Math.floor(1000 + Math.random() * 9000);
@@ -656,15 +822,124 @@ function requestLabTest() {
     id: orderId,
     patient: patient,
     panel: panel,
-    date: "June 13, 2026",
+    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
     status: "Pending"
   };
   
   state.labOrders.push(newOrder);
+  
+  try {
+    await fetch("/api/doctor/lab-orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: orderId,
+        patient_name: patient,
+        panel: panel
+      })
+    });
+  } catch (err) {
+    console.log("Could not save lab order to backend DB");
+  }
+  
   addAgentLog(`Dr. Vance requested diagnostic panel [${panel}] for patient ${patient}. Order ID: ${orderId}`, "info");
   showToast("Diagnostic Requested", `Lab panel ordered. Check Central Lab Portal.`);
   
   renderDoctorDashboard(patientsData[patient]);
+}
+
+async function invokeCTScanForSarah() {
+  const panel = "Abdominal CT Scan (Contrast-Enhanced)";
+  const patient = "Sarah Connor";
+  const orderId = "ORD-" + Math.floor(1000 + Math.random() * 9000);
+  
+  const newOrder = {
+    id: orderId,
+    patient: patient,
+    panel: panel,
+    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    status: "Pending"
+  };
+  
+  state.labOrders.push(newOrder);
+  
+  try {
+    await fetch("/api/doctor/lab-orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: orderId,
+        patient_name: patient,
+        panel: panel
+      })
+    });
+  } catch (err) {
+    console.log("Could not save CT scan order to backend DB");
+  }
+  
+  addAgentLog(`Akeso invoked CT recommendation. Diagnostic scan [${panel}] ordered for ${patient}. Order ID: ${orderId}`, "info");
+  showToast("CT Scan Ordered", `CT scan order dispatched to Central Lab Portal for Sarah Connor.`);
+  
+  renderDoctorDashboard(patientsData[patient]);
+}
+
+async function fetchMorningBriefing() {
+  const loadingEl = document.getElementById('morning-briefing-loading');
+  const summaryEl = document.getElementById('morning-briefing-summary');
+  const linksEl = document.getElementById('morning-briefing-links');
+  const btnEl = document.getElementById('btn-morning-briefing');
+
+  if (!loadingEl || !summaryEl || !linksEl) return;
+
+  // Show loading
+  loadingEl.style.display = 'flex';
+  summaryEl.textContent = 'Contacting clinical search pipeline...';
+  linksEl.innerHTML = '';
+  if (btnEl) btnEl.disabled = true;
+
+  try {
+    const res = await fetch('/api/doctor/morning-briefing');
+    if (!res.ok) throw new Error('API Error');
+
+    const data = await res.json();
+    
+    // Set summary text
+    summaryEl.textContent = data.summary || "No research summary available.";
+    
+    // Render links
+    if (data.articles && data.articles.length > 0) {
+      data.articles.forEach(art => {
+        const a = document.createElement('a');
+        a.href = art.url;
+        a.target = '_blank';
+        a.style.display = 'block';
+        a.style.fontSize = '11px';
+        a.style.color = 'var(--accent-cyan)';
+        a.style.textDecoration = 'none';
+        a.style.borderBottom = '1px dashed rgba(6,182,212,0.15)';
+        a.style.paddingBottom = '4px';
+        a.style.marginBottom = '2px';
+        a.innerHTML = `<strong>🔗 ${art.title}</strong><br><span style="color: var(--color-text-secondary); font-size: 10px;">${art.snippet.substring(0, 80)}...</span>`;
+        linksEl.appendChild(a);
+      });
+    } else {
+      linksEl.innerHTML = '<span class="text-muted" style="font-size: 10px;">No links returned.</span>';
+    }
+
+    // Play clinical voice read aloud if enabled
+    if (data.summary) {
+      speakWithCalmVoice(data.summary);
+    }
+    
+    showToast("Research Compiled", "Tavily returned latest Hepatology guidelines.");
+  } catch (err) {
+    console.error("Failed to fetch morning briefing:", err);
+    summaryEl.textContent = "Unable to connect to the Tavily search service. Check if your backend server is running and .env contains valid keys.";
+    showToast("Research Error", "Unable to pull clinical trial literature.", true);
+  } finally {
+    loadingEl.style.display = 'none';
+    if (btnEl) btnEl.disabled = false;
+  }
 }
 
 // ==========================================
@@ -1012,12 +1287,45 @@ async function triggerStoryStep(stepNum) {
 const ORCHESTRATOR_MAPPING = {
   app_name: "orchestrator",
   title: "LiverLink Orchestrator",
-  welcome: "Hello! I am the central LiverLink Orchestrator agent. I coordinate patient check-ins with Lila, caregiver summaries with Aria, biochemistry Extractions, and Hepatology Specialist pathways for doctors. How can I help you today?"
+  welcome: "Hello! I am the central LiverLink Orchestrator agent. I coordinate patient check-ins with Lila, caregiver summaries with Aria, biochemistry Extractions, and Akeso (Hepatologist Helper) pathways for doctors. How can I help you today?"
 };
 
 function configureFloatingChatForRole(role) {
   const trigger = document.getElementById('floating-chat-trigger');
+  const chatLabel = trigger.querySelector('.chat-label');
+  const chatAgentTitle = document.getElementById('chat-agent-title');
+  const chatAgentSubtitle = document.getElementById('chat-agent-subtitle');
+  const welcomeTextEl = document.getElementById('chat-system-welcome');
+  
   trigger.style.display = 'flex';
+  
+  // Set elegant dynamic names and descriptions based on active portal role
+  let labelText = "Talk to Lila";
+  let titleText = "Lila (Patient Companion)";
+  let subtitleText = "Daily Wellness Companion";
+  let welcomeText = "Hello John! I'm Lila. I can help guide you through your daily check-in, review sleep/diet logs, or start gentle exercise with Jax.";
+  
+  if (role === 'caregiver') {
+    labelText = "Talk to Aria";
+    titleText = "Aria (Caregiver Hub)";
+    subtitleText = "Family Compliance Companion";
+    welcomeText = "Hello! I'm Aria, your caregiver coordination companion. I can summarize compliance, analyze symptom reports, or highlight unacknowledged clinical alerts.";
+  } else if (role === 'doctor') {
+    labelText = "Talk to Akeso";
+    titleText = "Akeso (Hepatologist Helper)";
+    subtitleText = "Greek Goddess of Curing & Healing";
+    welcomeText = "Welcome Dr. Vance. I am Akeso, your specialized Hepatologist Helper, named after the Greek goddess of curing. Ask me about liver guidelines (AASLD/EASL), staging criteria, or pull comprehensive risk indicator profiles for your patients.";
+  } else if (role === 'lab') {
+    labelText = "Lab Coordinator";
+    titleText = "Serum Chemistry Agent";
+    subtitleText = "Diagnostic Analysis Support";
+    welcomeText = "Lab console connected. I can parse blood reports, evaluate biochem values against clinical guidelines, or help you update active patient rosters.";
+  }
+  
+  if (chatLabel) chatLabel.textContent = labelText;
+  if (chatAgentTitle) chatAgentTitle.textContent = titleText;
+  if (chatAgentSubtitle) chatAgentSubtitle.textContent = subtitleText;
+  if (welcomeTextEl) welcomeTextEl.textContent = welcomeText;
   
   // Clean and reset messages for a fresh portal session if not yet spoken
   const msgContainer = document.getElementById('chat-messages-container');
@@ -1025,7 +1333,7 @@ function configureFloatingChatForRole(role) {
     msgContainer.innerHTML = `
       <div class="chat-bubble system">
         <strong>System Connected</strong>
-        <p id="chat-system-welcome">Connected to Global Orchestrator Agent. Ask any care check-in questions, caregiver audits, or physician metrics.</p>
+        <p id="chat-system-welcome">${welcomeText}</p>
       </div>
     `;
   }
@@ -1161,6 +1469,22 @@ function appendChatBubble(sender, authorLabel, text) {
       </div>
     `;
   }
+  
+  // 1. Process bold text **bold**
+  cleanText = cleanText.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  
+  // 2. Process italic text *italic*
+  cleanText = cleanText.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  
+  // 3. Process markdown links [Text](URL) and convert them to styled action buttons
+  cleanText = cleanText.replace(/\[([^\]]+)\]\(((?:[^()]+|\([^()]*\))+)\)/g, (match, label, url) => {
+    if (url.startsWith("javascript:")) {
+      const jsCode = url.substring("javascript:".length);
+      return `<button onclick="${jsCode}; return false;" class="chat-action-btn">${label}</button>`;
+    } else {
+      return `<a href="${url}" target="_blank" class="chat-action-btn">${label}</a>`;
+    }
+  });
   
   bubble.innerHTML = `
     <strong>${authorLabel}</strong>
@@ -1668,31 +1992,44 @@ function speakWithCalmVoice(text) {
   const utterance = new SpeechSynthesisUtterance(cleanTextForSpeech);
   activeUtterance = utterance;
   
-  // Custom calm, therapeutic clinical audio profile
-  utterance.rate = 0.74; // Extremely calm, slower, peaceful speaking tempo
-  utterance.pitch = 0.82; // Lower, warmer, deeply soothing vocal pitch (removes digital sharpness)
-  utterance.volume = 0.45; // Soften the volume to 45% for a very gentle, quiet, and comforting clinical whisper
+  // Dynamically select parameters based on active role (doctor vs companions)
+  if (state.activeRole === 'doctor') {
+    utterance.rate = 0.88;   // Clear, professional, executive speaking tempo
+    utterance.pitch = 0.95;  // Confident, professional vocal pitch
+    utterance.volume = 0.75; // Direct clinical consultation volume
+  } else {
+    utterance.rate = 0.74;   // Calm therapeutic coaching tempo
+    utterance.pitch = 0.82;  // Warm, deeply soothing vocal pitch
+    utterance.volume = 0.45; // Gentle clinical whisper
+  }
   
-  // Dynamically select Samantha's high-fidelity soothing voice primarily
   const voices = window.speechSynthesis.getVoices();
-  const preferredVoice = voices.find(v => 
-    v.lang.includes('en') && v.name.toLowerCase().includes('samantha')
-  ) || voices.find(v => 
-    v.lang.includes('en') && v.name.toLowerCase().includes('siri')
-  ) || voices.find(v => 
-    v.lang.includes('en') && v.name.toLowerCase().includes('google') && v.name.toLowerCase().includes('us english')
-  ) || voices.find(v => 
-    v.lang.includes('en') && v.name.toLowerCase().includes('google')
-  ) || voices.find(v => 
-    v.lang.includes('en') && v.name.toLowerCase().includes('natural')
-  ) || voices.find(v => v.lang.includes('en'));
+  let preferredVoice;
+  
+  if (state.activeRole === 'doctor') {
+    // Look for a professional/premium clinical voice
+    preferredVoice = voices.find(v => 
+      v.lang.includes('en') && (v.name.toLowerCase().includes('premium') || v.name.toLowerCase().includes('natural') || v.name.toLowerCase().includes('daniel') || v.name.toLowerCase().includes('siri'))
+    ) || voices.find(v => 
+      v.lang.includes('en') && v.name.toLowerCase().includes('samantha')
+    ) || voices.find(v => v.lang.includes('en'));
+  } else {
+    // Warm therapeutic companion voice
+    preferredVoice = voices.find(v => 
+      v.lang.includes('en') && v.name.toLowerCase().includes('samantha')
+    ) || voices.find(v => 
+      v.lang.includes('en') && v.name.toLowerCase().includes('siri')
+    ) || voices.find(v => 
+      v.lang.includes('en') && v.name.toLowerCase().includes('google')
+    ) || voices.find(v => v.lang.includes('en'));
+  }
   
   if (preferredVoice) {
     utterance.voice = preferredVoice;
-    console.log(`[LIVERLINK VOICE] Activating Samantha / Premium voice profile: ${preferredVoice.name}`);
+    console.log(`[LIVERLINK VOICE] Activating vocal profile for ${state.activeRole}: ${preferredVoice.name}`);
   }
   
-  // When Coach Jax starts speaking, show active wave indicators on the active chat bubble
+  // When Coach Jax/Doctor starts speaking, show active wave indicators on the active chat bubble
   utterance.onstart = () => {
     addVoiceWaveIndicator();
   };

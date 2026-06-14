@@ -5,6 +5,7 @@ Everything on one origin → no CORS issues.
 """
 
 import httpx
+import json
 from pathlib import Path
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -14,6 +15,9 @@ import os
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from datetime import datetime, timezone
+from tavily import TavilyClient
+from google import genai
+from google.genai import types
 
 ADK_BASE = "http://127.0.0.1:8000"
 APP_NAME = "liverlink_pipeline"
@@ -64,10 +68,19 @@ async def get_js():
 async def scanner():
     return (HERE.parent / "frontend" / "upload.html").read_text(encoding="utf-8")
 
+@app.get("/api/doctor/patient-profile")
+async def get_doctor_patient_profile(patient_id: str = "John Doe"):
+    query_id = "patient_john_doe" if patient_id == "John Doe" else "patient_sarah_connor"
+    import sys
+    sys.path.append(str(HERE / "agents"))
+    from doctor_agent.tools import get_patient_comprehensive_profile
+    profile = get_patient_comprehensive_profile(query_id)
+    return JSONResponse(profile)
+
 @app.get("/api/doctor/lab-records")
 async def get_lab_records(patient_id: str = "patient_john_doe"):
     # Normalize ID to match standard patient identifier in MongoDB
-    query_id = PATIENT_ID if patient_id == "John Doe" else "patient_sarah_connor"
+    query_id = PATIENT_ID if patient_id == "John Doe" or patient_id == "patient_john_doe" else "patient_sarah_connor"
     
     if db is None:
         return JSONResponse([])
@@ -81,6 +94,10 @@ async def get_lab_records(patient_id: str = "patient_john_doe"):
         alt = 40
         ast = 35
         bili = 1.0
+        albumin = 3.8
+        inr = 1.0
+        creatinine = 1.0
+        sodium = 137.0
         
         for r in results:
             name_lower = r.get("name", "").lower()
@@ -93,6 +110,26 @@ async def get_lab_records(patient_id: str = "patient_john_doe"):
                 elif "bilirubin" in name_lower:
                     try:
                         bili = float(val)
+                    except (ValueError, TypeError):
+                        pass
+                elif "albumin" in name_lower:
+                    try:
+                        albumin = float(val)
+                    except (ValueError, TypeError):
+                        pass
+                elif "inr" in name_lower:
+                    try:
+                        inr = float(val)
+                    except (ValueError, TypeError):
+                        pass
+                elif "creatinine" in name_lower:
+                    try:
+                        creatinine = float(val)
+                    except (ValueError, TypeError):
+                        pass
+                elif "sodium" in name_lower:
+                    try:
+                        sodium = float(val)
                     except (ValueError, TypeError):
                         pass
                         
@@ -109,10 +146,132 @@ async def get_lab_records(patient_id: str = "patient_john_doe"):
             "alt": alt,
             "ast": ast,
             "bilirubin": bili,
+            "albumin": albumin,
+            "inr": inr,
+            "creatinine": creatinine,
+            "sodium": sodium,
             "orderedBy": metadata.get("referring_physician", "Dr. Vance"),
             "status": "Completed"
         })
     return JSONResponse(records)
+
+@app.get("/api/doctor/lab-orders")
+async def get_lab_orders():
+    if db is None:
+        return JSONResponse([])
+    
+    # Find all "lab_ordered" events in health_logs
+    cursor = db.health_logs.find({"event": "lab_ordered"}).sort("timestamp", 1)
+    orders = []
+    seen_ids = set()
+    for doc in cursor:
+        d = doc.get("data", {})
+        order_id = d.get("order_id")
+        if order_id not in seen_ids:
+            seen_ids.add(order_id)
+            orders.append({
+                "id": order_id,
+                "patient": d.get("patient_name"),
+                "panel": d.get("requested_panel"),
+                "date": doc.get("date"),
+                "status": d.get("status", "Pending")
+            })
+            
+    # Include default mock if empty
+    if not orders:
+        orders.append({
+            "id": "ORD-9821",
+            "patient": "John Doe",
+            "panel": "Comprehensive Liver Function Panel",
+            "date": "June 13, 2026",
+            "status": "Pending"
+        })
+    return JSONResponse(orders)
+
+@app.post("/api/doctor/lab-orders")
+async def post_lab_order(request: Request):
+    if db is None:
+        return JSONResponse({"status": "error", "message": "MongoDB not connected"}, status_code=500)
+    data = await request.json()
+    patient_name = data.get("patient_name", "John Doe")
+    patient_id = PATIENT_ID if patient_name == "John Doe" else "patient_sarah_connor"
+    panel = data.get("panel")
+    order_id = data.get("id")
+    
+    now = datetime.now(timezone.utc)
+    db.health_logs.insert_one({
+        "patient_id": patient_id,
+        "event": "lab_ordered",
+        "date": now.strftime("%Y-%m-%d"),
+        "timestamp": now,
+        "data": {
+            "order_id": order_id,
+            "patient_name": patient_name,
+            "requested_panel": panel,
+            "status": "Pending",
+            "ordered_by": "Dr. Elizabeth Vance"
+        }
+    })
+    return JSONResponse({"status": "success"})
+
+@app.get("/api/doctor/morning-briefing")
+async def get_morning_briefing():
+    tavily_key = os.getenv("TAVILY_API_KEY")
+    google_key = os.getenv("GOOGLE_API_KEY")
+    
+    if not tavily_key:
+        return JSONResponse({
+            "summary": "Tavily API key is missing. Please add TAVILY_API_KEY to your .env file to enable live research searches.",
+            "articles": []
+        })
+
+    # 1. Search Tavily for recent clinical developments
+    try:
+        tavily_client = TavilyClient(api_key=tavily_key)
+        query = "recent AASLD guidelines clinical trials liver cirrhosis MASH developments 2026"
+        resp = tavily_client.search(query=query, max_results=5)
+        results = resp.get("results", [])
+    except Exception as e:
+        return JSONResponse({
+            "summary": f"Failed to execute Tavily search: {str(e)}",
+            "articles": []
+        })
+
+    articles = []
+    for r in results:
+        articles.append({
+            "title": r.get("title", "Clinical Publication"),
+            "snippet": r.get("snippet", ""),
+            "url": r.get("url", "#")
+        })
+
+    # 2. Use Gemini to synthesize a concise professional summary
+    if google_key and articles:
+        try:
+            genai_client = genai.Client(api_key=google_key)
+            prompt = f"""
+            You are a specialized clinical research summarizer for Hepatology.
+            You are pre-summarizing the latest news and publications on liver disease for a busy liver specialist (Dr. Vance) this morning.
+            Below is the raw search results fetched from Tavily:
+            
+            {json.dumps(articles, indent=2)}
+            
+            Please provide an extremely professional, concise clinical briefing (3-4 sentences maximum) highlighting the most important breakthrough or update. Focus on therapeutic changes, clinical trials, or guidelines. Speak in expert medical terminology. Do not include markdown headers or greetings.
+            """
+            gemini_resp = genai_client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=[types.Part.from_text(text=prompt)]
+            )
+            summary = gemini_resp.text.strip()
+        except Exception as e:
+            summary = "Failed to generate AI synthesis. Please review the live articles below."
+    else:
+        summary = "Live search results returned successfully. (Gemini AI synthesis unavailable)."
+
+    return JSONResponse({
+        "summary": summary,
+        "articles": articles
+    })
 
 @app.get("/api/caregiver/alerts")
 async def get_caregiver_alerts(patient_id: str = "patient_john_doe"):

@@ -16,6 +16,10 @@ from doctor_agent.tools import (
     get_hepatology_clinical_pathway,
     get_patient_comprehensive_profile,
     notify_doctor_and_prep_emergency_admission,
+    update_patient_prescription,
+    order_lab_test_and_alert_lab,
+    order_imaging_scan,
+    get_clinical_feed_knowing_patient_details,
 )
 
 root_agent = Agent(
@@ -25,7 +29,8 @@ root_agent = Agent(
         "An advanced clinical decision support agent for hepatologists. "
         "Capable of calculating MELD-Na, Child-Pugh class, analyzing liver "
         "disease progression (MASH, cirrhosis, ascites), retrieving patient comprehensive profiles, "
-        "and retrieving web data using Tavily for up-to-date medical guidelines."
+        "updating patient prescriptions, dispatching lab test orders to the central lab, "
+        "ordering imaging scans (like CT scans), fetching patient tailored clinical feed based on profile data, and retrieving web data using Tavily for up-to-date medical guidelines."
     ),
     instruction=DOCTOR_AGENT_INSTRUCTION,
     tools=[
@@ -35,5 +40,9 @@ root_agent = Agent(
         search_web,
         get_patient_comprehensive_profile,
         notify_doctor_and_prep_emergency_admission,
+        update_patient_prescription,
+        order_lab_test_and_alert_lab,
+        order_imaging_scan,
+        get_clinical_feed_knowing_patient_details,
     ],
 )

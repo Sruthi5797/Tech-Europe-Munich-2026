@@ -166,21 +166,51 @@ Output ONLY valid JSON — no markdown, no explanation, no code fences.
 
     print(f"Successfully processed patient {patient_id} ({patient_name})\n")
 
+
+def _parse_args(args: list[str]) -> tuple[str, list[str]]:
+    """Return (model, patient_ids)."""
+    model = "gliner2"  # Default to pioneer parser output model
+    if "--model" in args:
+        idx = args.index("--model")
+        if idx + 1 < len(args):
+            model = args[idx + 1]
+
+    target_ids = [
+        a for a in args
+        if not a.startswith("--") and a not in (model,)
+    ]
+    return model, target_ids
+
+
 def main():
-    print("Starting MongoDB populator for parsed LFT reports...\n")
-    # Search for all *_parsed_gemini.json files
-    parsed_files = sorted(TEST_DATA_DIR.glob("**/PT-2026-*_parsed_gemini.json"))
+    import sys
+    model, target_ids = _parse_args(sys.argv[1:])
+    print(f"Starting MongoDB populator for parsed LFT reports using model '{model}'...\n")
+
+    if target_ids:
+        parsed_files = []
+        for pid in target_ids:
+            found = list(TEST_DATA_DIR.glob(f"**/{pid}_parsed_{model}.json"))
+            if found:
+                parsed_files.extend(found)
+            else:
+                print(f"WARNING: No parsed report found for patient {pid} using model {model}")
+    else:
+        # Search for all *_parsed_{model}.json files
+        parsed_files = sorted(TEST_DATA_DIR.glob(f"**/PT-2026-*_parsed_{model}.json"))
     
     if not parsed_files:
-        print("No parsed patient reports found. Please run pioneer_lab_parser.py first.")
+        print(f"No parsed patient reports found with pattern *_parsed_{model}.json. Please run pioneer_lab_parser.py first.")
         return
 
-    print(f"Found {len(parsed_files)} parsed patient report(s).")
+    print(f"Found {len(parsed_files)} parsed patient report(s) for model '{model}'.")
     
     for file_path in parsed_files:
         process_patient_report(file_path)
 
-    print("All patient records successfully processed and loaded into MongoDB.")
+    print(f"All patient records for model '{model}' successfully processed and loaded into MongoDB.")
+
 
 if __name__ == "__main__":
+    main()
     main()

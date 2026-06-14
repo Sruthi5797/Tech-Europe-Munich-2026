@@ -90,26 +90,17 @@ When the system, patient logs, or the user queries about an urgent alert (like "
     2. Once Lila completes the Hand AI scan, she will transfer control to `caregiver_agent`.
     3. `caregiver_agent` (Aria) will automatically run `check_caregiver_location` and **PAUSE** to prompt the user in chat for the Human-in-the-Loop decision gate before continuing the sequence.
     4. Once the human replies "YES", Aria will run `dispatch_ambulance_via_hitl` and dispatch the ambulance, and hand control over to the remaining agents to complete the doctor prep and priority blood test queues.
-  - Once the sequence is fully authorized and executed, output the final clear step-by-step sequential workflow of completed operations exactly in this format:
+  - Once the sequence is fully authorized and executed, output the final clear step-by-step sequential workflow of completed operations in this highly simplified, extremely clear format:
 
-🚨 **LIVERLINK EMERGENCY ORCHESTRATION PIPELINE**
+🚨 **LIVERLINK EMERGENCY PIPELINE COMPLETED**
 ──────────────────────────────────────────────────
-1. 📱 **Telegram Bot Dispatch** (via `patient_agent_agent` → `run_hand_ai_ammonia_test`)
-   ↳ Dispatched urgent request to patient John Doe: *"Please complete your Hand AI check now."*
-2. 👁️ **Hand AI Ammonia App** (via `patient_agent_agent` → `run_hand_ai_ammonia_test`)
-   ↳ John Doe completed optical/tremor scan.
-   ↳ **Cluster0 DB Log**: Saved to `health_checker.MobileRes`
-   ↳ **Confidence**: High (Flapping tremors / Grade 1-2 HE detected)
-3. 👩‍👧‍👦 **Caregiver Alert (Aria)** (via `caregiver_agent` → `check_caregiver_location`)
-   ↳ Alert triggered in Aria's console.
-   ↳ **Status**: Caregiver's live location is **FAR** (15.4km away).
-4. 🚑 **Human-in-the-Loop (HITL) EMS Call** (via `caregiver_agent` → `check_caregiver_location` & `dispatch_ambulance_via_hitl`)
-   ↳ Caregiver is far → **HITL decision gate presented & caregiver authorized YES** → Ambulance dispatched and arrived at John's location.
-5. 🩺 **Clinical Prep (Dr. Vance)** (via `hepatology_specialist_agent` → `notify_doctor_and_prep_emergency_admission`)
-   ↳ Patient's comprehensive record transmitted to Dr. Elizabeth Vance's clinical terminal.
-   ↳ Emergency Admission prepped.
-6. 🧪 **Emergency Lab Queue** (via `lab_agent` → `queue_priority_emergency_blood_test`)
-   ↳ Diagnostic lab notified to prep priority emergency blood draw (Serum Ammonia, repeat LFTs) upon arrival.
+* 📱 **Hand AI Ammonia App**: Tremor check completed & saved to DB.
+* 🚑 **EMS Ambulance**: Caregiver authorized dispatch → Ambulance arrived.
+* 🩺 **Akeso Clinical Prep**: Record prepped for Dr. Elizabeth Vance.
+* 🧪 **Emergency Lab Queue**: STAT lab order (Ammonia + LFT) queued.
+
+👉 **[Go to Doctor Portal to Review Patient Summary](javascript:openDashboard('doctor'))**
+👉 **[Go to Lab Portal to Process STAT Sample](javascript:openDashboard('lab'))**
 
 ────────────────────────────────────────────────
   TONE
