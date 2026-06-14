@@ -8,8 +8,20 @@ This is the A2A communication channel — no direct agent-to-agent call needed.
 
 from datetime import datetime, timezone, timedelta
 import json
+import os
+
+import requests
 
 from shared.db import get_db, PATIENT_ID
+
+# LiverLink Telegram API (patient messaging). Same service the patient agent uses.
+TELEGRAM_API_URL = os.getenv("TELEGRAM_API_URL", "http://localhost:8001")
+
+
+def _mobileres_collection():
+    """Hand AI test results are written by the iOS app to health_checker.MobileRes
+    (a different database than the agents' `liverlink` db)."""
+    return get_db().client["health_checker"]["MobileRes"]
 
 
 def _now() -> str:
@@ -593,6 +605,140 @@ def get_cld_care_tip(topic: str) -> dict:
 
     print(f"[LIVERLINK LOG] Care tip retrieved for topic: {topic}")
     return {"status": "success", "topic": topic, "guidance": matched}
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  Hand AI Result Check  →  Emergency Authorization Request (via Telegram)
+# ──────────────────────────────────────────────────────────────────────────────
+
+def check_hand_ai_and_request_emergency_authorization(patient_id: str = PATIENT_ID) -> dict:
+    """
+    Check the patient's latest Hand AI (asterixis) test result and, if a flapping
+    tremor is detected, message the patient on Telegram to authorize an emergency
+    ambulance dispatch.
+
+    Reads the most recent record the iOS app wrote to health_checker.MobileRes.
+    A "flap" result (decision == "flap" / outcome == "flap_detected") indicates
+    possible grade 1-2 hepatic encephalopathy. The patient is asked to reply
+    YES or NO; read the reply with get_emergency_authorization_reply().
+
+    Args:
+        patient_id: The patient identifier (defaults to the demo patient).
+
+    Returns:
+        Status of the check and the Telegram dispatch.
+    """
+    col = _mobileres_collection()
+    try:
+        latest = col.find_one(sort=[("createdAt", -1)])
+    except Exception as e:
+        return {"status": "error", "message": f"Could not read Hand AI results: {e}"}
+
+    if not latest:
+        return {"status": "no_data", "message": "No Hand AI test results found in MobileRes."}
+
+    # The iOS app doesn't stamp patient_id yet — backfill it so the record is
+    # attributable to the patient (and future queries can filter by patient).
+    if not latest.get("patient_id"):
+        try:
+            col.update_one({"_id": latest["_id"]}, {"$set": {"patient_id": patient_id}})
+        except Exception as e:
+            print(f"[DB WRITE ERROR backfilling patient_id] {e}")
+        latest["patient_id"] = patient_id
+    resolved_patient = latest.get("patient_id") or patient_id
+
+    is_flap = latest.get("decision") == "flap" or latest.get("outcome") == "flap_detected"
+    hand_ai_result = {
+        k: latest.get(k)
+        for k in ("outcome", "decision", "flapEvents", "pattern", "symmetry", "confidence")
+    }
+
+    if not is_flap:
+        return {
+            "status": "normal",
+            "patient_id": resolved_patient,
+            "hand_ai_result": hand_ai_result,
+            "message": "Latest Hand AI test is normal — no asterixis detected. No action needed.",
+        }
+
+    # Flap detected → request emergency authorization from the patient via Telegram.
+    message = (
+        "John's Hand AI test has confirmed grade 1-2 hepatic encephalopathy.\n\n"
+        "Do you authorize LiverLink to dispatch an emergency ambulance to John's "
+        "residence immediately? (Please reply YES or NO)"
+    )
+    telegram_dispatch = "offline"
+    try:
+        res = requests.post(
+            f"{TELEGRAM_API_URL}/send",
+            json={
+                "patient_id": resolved_patient,
+                "from_agent": "caregiver_agent",
+                "text": message,
+            },
+            timeout=3,
+        )
+        telegram_dispatch = "sent" if res.status_code == 200 else f"error_{res.status_code}"
+    except Exception as e:
+        print(f"[A2A Telegram API Offline / Falling back] {e}")
+
+    print(f"[LIVERLINK LOG] Flap detected for {resolved_patient}; emergency auth request {telegram_dispatch}")
+    return {
+        "status": "authorization_requested",
+        "patient_id": resolved_patient,
+        "hand_ai_result": hand_ai_result,
+        "telegram_dispatch": telegram_dispatch,
+        "message": (
+            "Asterixis detected. Emergency ambulance authorization request sent to the "
+            "patient via Telegram. Awaiting their YES/NO reply — call "
+            "get_emergency_authorization_reply to read it."
+        ),
+    }
+
+
+def get_emergency_authorization_reply(patient_id: str = PATIENT_ID) -> dict:
+    """
+    Read the patient's most recent Telegram reply — used to capture their YES/NO
+    answer to the emergency ambulance authorization request.
+
+    Args:
+        patient_id: The patient identifier.
+
+    Returns:
+        The reply text and a parsed `authorized` boolean (True if the patient said
+        YES). Pass that into dispatch_ambulance_via_hitl(authorized=...).
+    """
+    try:
+        res = requests.get(
+            f"{TELEGRAM_API_URL}/messages/latest-reply",
+            params={"patient_id": patient_id},
+            timeout=3,
+        )
+    except Exception as e:
+        return {"status": "offline", "message": f"Telegram API unreachable: {e}"}
+
+    if res.status_code != 200:
+        return {"status": "error", "message": f"Telegram API returned {res.status_code}"}
+
+    reply = res.json()
+    if not reply:
+        return {"status": "no_reply", "message": "The patient hasn't replied yet."}
+
+    text = (reply.get("text") or "").strip().lower()
+    authorized = text in ("yes", "y", "yes.", "yes!", "ok", "okay", "authorize", "authorise", "confirm")
+    declined = text in ("no", "n", "no.", "cancel", "stop")
+    return {
+        "status": "success",
+        "patient_id": patient_id,
+        "reply_text": reply.get("text"),
+        "authorized": authorized,
+        "declined": declined,
+        "message": (
+            "Patient AUTHORIZED ambulance dispatch." if authorized
+            else "Patient DECLINED ambulance dispatch." if declined
+            else f"Ambiguous reply: '{reply.get('text')}'. Confirm with the patient."
+        ),
+    }
 
 
 def check_caregiver_location(patient_id: str = "patient_john_doe") -> dict:
