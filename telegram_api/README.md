@@ -101,6 +101,18 @@ The server only makes **outbound** calls to Telegram, so it works fine on
 localhost — no public URL needed for sending or for onboarding. (A public URL is
 only relevant to the app's redirect page, which the iOS teammate hosts.)
 
+### As part of the full stack (`run_all.sh`)
+
+`run_all.sh` launches this server on **port 8001** (the port the agents POST to).
+It uses the project's **root `.venv`**, so install our deps into it once:
+
+```bash
+.venv/bin/pip install -r telegram_api/requirements.txt
+```
+
+and make sure `telegram_api/.env` exists (the launcher skips the Telegram API
+if it's missing). Logs go to `telegram_api.log`.
+
 `.env` keys: `TELEGRAM_BOT_TOKEN`, `MONGODB_URI`, `MONGODB_DB` (default
 `liverlink`), `APP_OPEN_URL` (app redirect page), `API_KEY` (optional auth),
 `APP_SCHEME` (default `liverflapcheck`, used only by the built-in `/open` fallback).
