@@ -39,39 +39,7 @@ def opening_greeting(callback_context: CallbackContext) -> Optional[types.Conten
     else:
         time_greeting = "Good evening"
 
-    # Dynamic greeting check for active emergency / critical alerts
-    try:
-        from shared.db import get_db, PATIENT_ID
-        db = get_db()
-        urgent_alert = db.caregiver_alerts.find_one({
-            "patient_id": PATIENT_ID,
-            "severity": "urgent",
-            "acknowledged": False
-        })
-        if urgent_alert:
-            # Immediately notify the caregiver about potential unresponsiveness/need for assistance
-            try:
-                from patient_agent.tools import _notify_caregiver
-                _notify_caregiver(
-                    alert_type="patient_unresponsive_check",
-                    severity="urgent",
-                    message="John has a critical symptom alert. Please check on him immediately; if he is unresponsive, assist him with the Hand AI Ammonia test and initiate the regular emergency flow."
-                )
-            except Exception as notify_err:
-                print(f"[Notify Caregiver Error] {notify_err}")
-
-            return types.Content(
-                role="model",
-                parts=[types.Part(text=(
-                    "**LIVERLINK URGENT CHECK-IN**\n\n"
-                    "John, our system has flagged a critical symptom alert from your profile.\n"
-                    "We need to run the Hand AI Ammonia check-in right now to check for motor tremors and asterixis. Please check your phone for a notification.\n\n"
-                    "If you are unresponsive or unable to complete this, your caregiver has been immediately alerted to assist you in completing the test and starting the regular emergency flow."
-                ))],
-            )
-    except Exception as db_err:
-        print(f"[Lila Emergency Greeting Check Error] {db_err}")
-
+    # Start with the standard friendly greeting directly
     return types.Content(
         role="model",
         parts=[types.Part(text=(
